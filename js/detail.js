@@ -307,7 +307,13 @@ function clearSectionInputs(section) {
   });
   section.querySelectorAll('textarea').forEach(el => { el.value = ''; });
   section.querySelectorAll('select').forEach(el => {
-    /* 첫 옵션이 placeholder(disabled or value="")면 그걸 선택, 아니면 0번 */
+    /* HTML 에 명시된 selected attribute (defaultSelected) 가 있으면 우선 — productModel 분기로
+       박은 default 값(예: FG 의 Finished Goods)을 보존. 없으면 placeholder 또는 0번 fallback */
+    const defaultIdx = Array.from(el.options).findIndex(o => o.defaultSelected);
+    if (defaultIdx !== -1) {
+      el.selectedIndex = defaultIdx;
+      return;
+    }
     let resetIdx = 0;
     for (let i = 0; i < el.options.length; i++) {
       if (el.options[i].disabled || !el.options[i].value) { resetIdx = i; break; }
@@ -873,7 +879,7 @@ if (!isCust) {
         <div class="form-grid">
           <div class="form-group">
             <label>${productModel.parentCodeLabel}</label>
-            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" value="${productModel.release.parentCode}" placeholder="auto generate" readonly><span class="focus-border"></span></div>
+            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" value="${pStatus === 'approved' ? productModel.release.parentCode : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div>
           </div>
           <div class="form-group">
             <label>${productModel.parentNameLabel}</label>
@@ -942,7 +948,7 @@ if (!isCust) {
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${productModel.release.variants[0].code}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? productModel.release.variants[0].code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
                   <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt1Name}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
                 </tr>
@@ -970,7 +976,7 @@ if (!isCust) {
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${productModel.release.variants[1].code}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? productModel.release.variants[1].code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
                   <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt2Name}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
                 </tr>
@@ -2472,6 +2478,7 @@ if (!isCust) {
       </div>`,
 
     'Release': `
+      ${pStatus === 'approved' ? `
       <!-- Parent Code Info — Basic Info PARENT CODE INFO 와 매칭 -->
       <div class="hoo-spec-head">
         <h5 class="bi-block-title"><span class="bi-bar"></span>Parent Code Info</h5>
@@ -2600,6 +2607,14 @@ if (!isCust) {
           </tfoot>
         </table>
       </div>
+      ` : `
+      <!-- Skeleton — 모든 승인 완료 전엔 master record 미발급. Approval Trace 만 노출 -->
+      <div class="rel-skeleton">
+        <div class="rel-skeleton-icon"><i class="material-icons">hourglass_empty</i></div>
+        <div class="rel-skeleton-title">Master record awaits final approval</div>
+        <div class="rel-skeleton-sub">All approval steps must be complete before the master record is generated.</div>
+      </div>
+      `}
 
       <!-- Approval trace — progressStatus 기반 동적 상태 표시 (done / current(진행중) / pending / rejected) -->
       <div class="hoo-spec-head hoo-spec-head--gap">
@@ -2608,7 +2623,7 @@ if (!isCust) {
       <div class="rel-trace">
         ${(() => {
           const traceRoles = isFG
-            ? ['Technologist', 'Product Management', 'Supply Chain', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance']
+            ? ['Product Management', 'Technologist', 'Supply Chain', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance']
             : ['Quality', 'Product Management', 'Supply Chain', 'Sourcing', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance'];
           const stateClass = { done:'rel-trace-done', current:'rel-trace-inprogress', pending:'rel-trace-pending', rejected:'rel-trace-rejected' };
           const displayName = role => role === 'Customs(GTC)' ? 'Customs (GTC)' : role;

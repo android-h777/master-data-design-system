@@ -142,7 +142,7 @@ const finishedGoodsFlow = {
   ...newCodeCreationFlow,
   nodes: newCodeCreationFlow.nodes.map(n =>
     (n.type === 'row' && n.items.includes('Product Management') && n.items.includes('Quality'))
-      ? { ...n, items: ['Technologist', 'Product Management', 'Supply Chain'] }
+      ? { ...n, items: ['Product Management', 'Technologist', 'Supply Chain'] }
       : n
   )
 };

@@ -4936,6 +4936,44 @@ button{ font-family: inherit; }
   font-weight: 500;
 }
 
+/* Release skeleton — 모든 승인 완료 전 표시되는 placeholder.
+   Master record 가 아직 발급되지 않았음을 명시 + Approval Trace 가 아래에 함께 표시됨 */
+.rel-skeleton{
+  text-align: center;
+  padding: 50px 24px;
+  background: rgba(126, 111, 168, 0.04);
+  border: 1px solid rgba(126, 111, 168, 0.22);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+.rel-skeleton-icon{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: rgba(126, 111, 168, 0.10);
+  color: var(--c-primary-d);
+}
+.rel-skeleton-icon i{
+  font-size: 28px;
+}
+.rel-skeleton-title{
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 6px;
+}
+.rel-skeleton-sub{
+  font-size: 13px;
+  color: var(--c-text-mute);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
 /* Release approval trace */
 .rel-trace{
   display: grid;
@@ -5368,6 +5406,10 @@ button{ font-family: inherit; }
 .hoo-table .aniInput input.hoo-num{
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+/* SKU-code # 컬럼의 코드 값은 텍스트라 왼쪽 정렬 (placeholder 도 동일) */
+.hoo-table .aniInput input.cnt-matnum{
+  text-align: left;
 }
 .hoo-table .aniInput input.hoo-target{
   color: #8a6a1a;
