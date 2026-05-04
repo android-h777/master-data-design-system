@@ -258,6 +258,14 @@ function convertSectionToView(section, opts) {
   section.querySelectorAll('.readonly-val').forEach(el => {
     el.className = 'form-static stage-view-text';
   });
+  /* bi-readonly (lock 아이콘 박스) → 평문 텍스트로 변환 (view 모드 일관성) */
+  section.querySelectorAll('.bi-readonly').forEach(el => {
+    const txt = el.querySelector('.bi-readonly-text');
+    const div = document.createElement('div');
+    div.className = 'form-static stage-view-text';
+    div.textContent = ((txt ? txt.textContent : el.textContent) || '').trim() || '—';
+    el.replaceWith(div);
+  });
   /* doc-verify-inline 제거 시 이전 형제 'AI Document Verification' 헤더도 같이 */
   section.querySelectorAll('.doc-verify-inline').forEach(el => {
     const prev = el.previousElementSibling;
@@ -381,7 +389,7 @@ if (!isCust) {
   const _idNum = parseInt(String(pId || '').replace(/\D/g, ''), 10) || 0;
   const _bankItem = _bank[_idNum % _bank.length] || _bank[0];
   const productModel = {
-    nameLabel:       isFG ? 'Product Name' : 'Material Name',
+    nameLabel:       isFG ? 'SKU FG Name' : 'Material Name',
     parentCodeLabel: isFG ? 'Parent FG Code' : 'Parent RM Code',
     parentNameLabel: isFG ? 'Parent FG Name' : 'Parent RM Name',
     fullName:        _bankItem.fullName,
@@ -944,7 +952,7 @@ if (!isCust) {
         </div>
 
         <div class="bi-block-head">
-          <h5 class="bi-block-title"><span class="bi-bar"></span>PROCUREMENT PLANT &amp; WAREHOUSE</h5>
+          <h5 class="bi-block-title"><span class="bi-bar"></span>PLANT &amp; WAREHOUSE</h5>
           <div class="bi-block-meta">
             <a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light" id="biAddPlant"><i class="material-icons">add</i><span class="label">Add row</span></a>
           </div>
@@ -955,15 +963,13 @@ if (!isCust) {
               <col style="width:40px">
               <col>
               <col>
-              <col style="width:170px">
               <col style="width:36px">
             </colgroup>
             <thead>
               <tr>
                 <th>No.</th>
-                <th class="hoo-th-key">Procurement Plant <span class="hoo-req">*</span></th>
+                <th class="hoo-th-key">Plant <span class="hoo-req">*</span></th>
                 <th class="hoo-th-key">Warehouse <span class="hoo-req">*</span></th>
-                <th>Purchasing Org</th>
                 <th></th>
               </tr>
             </thead>
@@ -988,7 +994,6 @@ if (!isCust) {
                     </select>
                   </div>
                 </td>
-                <td><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">AM01 — America</span></div></td>
                 <td class="hoo-x"><i class="material-icons">close</i></td>
               </tr>
               <tr>
@@ -1011,7 +1016,6 @@ if (!isCust) {
                     </select>
                   </div>
                 </td>
-                <td><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">AM01 — America</span></div></td>
                 <td class="hoo-x"><i class="material-icons">close</i></td>
               </tr>
             </tbody>
@@ -1031,7 +1035,7 @@ if (!isCust) {
             <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">AI document verification completed</span></label></li>
             <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Parent Code Info fields are complete</span></label></li>
             <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Composition Rate adds up to 100%</span></label></li>
-            <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Procurement plant &amp; container defined</span></label></li>
+            <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Plant &amp; container defined</span></label></li>
           </ul>
           <div class="pm-confirm-actions">
             <button class="hBtn hGrey waves-effect"><i class="material-icons">close</i><span class="label">Reject</span></button>
@@ -1096,10 +1100,120 @@ if (!isCust) {
             <div class="aniInput"><input type="text" class="browser-default" value="22.50"><span class="focus-border"></span></div>
           </div>
         </div>
+        <div class="form-group">
+          <label>Currency <span class="req">*</span></label>
+          <div class="pm-input-wrap">
+            <select><option selected>USD</option><option>EUR</option><option>KRW</option><option>RMB</option><option>JPY</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Production Hierarchy <span class="req">*</span></label>
+          <div class="pm-input-wrap">
+            <select><option value="" disabled>Select</option><option selected>Industrial Coatings</option><option>Architectural Coatings</option><option>Automotive Refinish</option><option>Marine &amp; Protective</option><option>Specialty</option></select>
+          </div>
+        </div>
         <div class="form-group span-2">
           <label>Product Texts (master memo)</label>
           <textarea class="detail-textarea" rows="2" placeholder="Internal product description shared across all sizes...">${productModel.pm.productTextsValue}</textarea>
         </div>
+      </div>
+
+      <!-- Sales Org -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>SALES ORG</h5>
+        <div class="bi-block-meta">
+          <a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light" id="pmAddSalesOrg"><i class="material-icons">add</i><span class="label">Add row</span></a>
+        </div>
+      </div>
+      <div class="hoo-spec-table">
+        <table class="hoo-table" id="pmSalesOrgTable">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:140px">
+            <col style="width:200px">
+            <col>
+            <col style="width:36px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th class="hoo-th-key">Role <span class="hoo-req">*</span></th>
+              <th class="hoo-th-key">Sales Org <span class="hoo-req">*</span></th>
+              <th>Description</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="hoo-no">1</td>
+              <td><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Routing</span></div></td>
+              <td>
+                <div class="bi-select-wrap">
+                  <select class="bi-select browser-default">
+                    <option value="JP01" selected>JP01</option>
+                    <option value="JP02">JP02</option>
+                    <option value="US01">US01</option>
+                    <option value="DE01">DE01</option>
+                    <option value="CN01">CN01</option>
+                  </select>
+                </div>
+              </td>
+              <td class="pm-sales-desc"><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Momentive Japan</span></div></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="hoo-no">2</td>
+              <td><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Additional</span></div></td>
+              <td>
+                <div class="bi-select-wrap">
+                  <select class="bi-select browser-default">
+                    <option value="JP01">JP01</option>
+                    <option value="JP02" selected>JP02</option>
+                    <option value="US01">US01</option>
+                    <option value="DE01">DE01</option>
+                    <option value="CN01">CN01</option>
+                  </select>
+                </div>
+              </td>
+              <td class="pm-sales-desc"><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Momentive Korea</span></div></td>
+              <td class="hoo-x"><i class="material-icons">close</i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Technical Contacts -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>TECHNICAL CONTACTS</h5>
+        <div class="bi-block-meta">
+          <a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light" id="pmAddTechContact"><i class="material-icons">add</i><span class="label">Add row</span></a>
+        </div>
+      </div>
+      <div class="hoo-spec-table">
+        <table class="hoo-table" id="pmTechContactTable">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:200px">
+            <col>
+            <col style="width:36px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th class="hoo-th-key">Tech. Contact <span class="hoo-req">*</span></th>
+              <th class="hoo-th-key">Tech. Name <span class="hoo-req">*</span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="hoo-no">1</td>
+              <td><div class="aniInput"><input type="text" class="browser-default" value="NEGIL"><span class="focus-border"></span></div></td>
+              <td><div class="aniInput"><input type="text" class="browser-default" value="NEGIL"><span class="focus-border"></span></div></td>
+              <td class="hoo-x"><i class="material-icons">close</i></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Per-spec table -->
@@ -1135,12 +1249,11 @@ if (!isCust) {
             /* 가격: stdCost 의 숫자만 추출 */
             const costMatch = (sku.stdCost || '').match(/[\d,.]+/);
             const priceNum = costMatch ? costMatch[0] : '—';
-            const priceCurr = isFG ? 'KRW' : 'RMB';
+            const priceCurr = isFG ? 'USD' : 'RMB';
             const mrpDefault = i === 0 ? 'MTO' : 'MTS';
             return `
           <tr>
             <td class="pm-spec-name">
-              <span class="pm-mat-pill">Mat#${i + 1}</span>
               <span class="pm-mat-text">${sku.matName}</span>
             </td>
             <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option${mrpDefault === 'MTO' ? ' selected' : ''}>MTO</option><option${mrpDefault === 'MTS' ? ' selected' : ''}>MTS</option></select></div></td>
@@ -1558,9 +1671,9 @@ if (!isCust) {
           </div>
         </div>
         <div class="form-group">
-          <label>Shelf Life (months)</label>
+          <label>Shelf Life (months) <span class="pm-curr">from Technologist</span></label>
           <div class="pm-input-wrap">
-            <div class="aniInput"><input type="text" class="browser-default" value="12"><span class="focus-border"></span></div>
+            <div class="aniInput"><input type="text" class="browser-default" value="12" readonly><span class="focus-border"></span></div>
           </div>
         </div>
       </div>
@@ -2764,12 +2877,67 @@ if (!isCust) {
     if (t.classList.contains('mat-name-input')) syncAllContainerRows();
   });
 
+  /* Product Management — Sales Org → Description 매핑 */
+  const SALES_ORG_DESC = {
+    'JP01': 'Momentive Japan',
+    'JP02': 'Momentive Korea',
+    'US01': 'Momentive America',
+    'DE01': 'Momentive Europe',
+    'CN01': 'Momentive China',
+  };
+  function salesOrgOptionsHtml(selected) {
+    return Object.keys(SALES_ORG_DESC).map(code =>
+      `<option value="${code}"${code === selected ? ' selected' : ''}>${code}</option>`
+    ).join('');
+  }
+  function syncSalesOrgDesc(tr) {
+    if (!tr) return;
+    const sel = tr.querySelector('.bi-select');
+    const descEl = tr.querySelector('.pm-sales-desc .bi-readonly-text');
+    if (!sel || !descEl) return;
+    descEl.textContent = SALES_ORG_DESC[sel.value] || '—';
+  }
+  function addSalesOrgRow() {
+    const tbl = document.getElementById('pmSalesOrgTable');
+    if (!tbl) return;
+    const tbody = tbl.querySelector('tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="hoo-no"></td>
+      <td><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Additional</span></div></td>
+      <td>
+        <div class="bi-select-wrap">
+          <select class="bi-select browser-default">${salesOrgOptionsHtml('US01')}</select>
+        </div>
+      </td>
+      <td class="pm-sales-desc"><div class="bi-readonly"><i class="material-icons bi-readonly-ico">lock</i><span class="bi-readonly-text">Momentive America</span></div></td>
+      <td class="hoo-x"><i class="material-icons">close</i></td>`;
+    tbody.appendChild(tr);
+    renumberQaRows(tbody);
+    M.FormSelect.init(tr.querySelectorAll('select'));
+  }
+  function addTechContactRow() {
+    const tbl = document.getElementById('pmTechContactTable');
+    if (!tbl) return;
+    const tbody = tbl.querySelector('tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="hoo-no"></td>
+      <td><div class="aniInput"><input type="text" class="browser-default" placeholder="ID"><span class="focus-border"></span></div></td>
+      <td><div class="aniInput"><input type="text" class="browser-default" placeholder="Name"><span class="focus-border"></span></div></td>
+      <td class="hoo-x"><i class="material-icons">close</i></td>`;
+    tbody.appendChild(tr);
+    renumberQaRows(tbody);
+  }
+
   /* 이벤트 위임 — 정적/동적 행 모두 대응 */
   document.addEventListener('click', (e) => {
     if (e.target.closest('#compAddRow'))     { addCompRow();      return; }
     if (e.target.closest('#biAddPlant'))     { addPlantRow();     return; }
     if (e.target.closest('#biAddContainer')) { addContainerRow(); return; }
-    const xCell = e.target.closest('#basicInfoPanel .hoo-table .hoo-x');
+    if (e.target.closest('#pmAddSalesOrg'))   { addSalesOrgRow();    return; }
+    if (e.target.closest('#pmAddTechContact')){ addTechContactRow(); return; }
+    const xCell = e.target.closest('#basicInfoPanel .hoo-table .hoo-x, #pmSalesOrgTable .hoo-x, #pmTechContactTable .hoo-x');
     if (xCell) {
       const tr = xCell.closest('tr');
       if (!tr) return;
@@ -2783,6 +2951,10 @@ if (!isCust) {
   });
   document.addEventListener('input', (e) => {
     if (e.target.classList.contains('comp-pct-input')) updateCompositionTotal();
+  });
+  document.addEventListener('change', (e) => {
+    const sel = e.target.closest('#pmSalesOrgTable .bi-select');
+    if (sel) syncSalesOrgDesc(sel.closest('tr'));
   });
 
   function renderStageSections() {
