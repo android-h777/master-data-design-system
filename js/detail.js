@@ -618,7 +618,7 @@ if (!isCust) {
   const subLabels = { 'new':'New Code Creation', 'plant':'Add Plant', 'packing':'Add Packing Size', 'reactivation':'Reactivation' };
   function updateTitle() {
     applyTitleBar({
-      badgeText: subLabels[pSub] || pType,
+      badgeText: subLabels[pSub] ? (pType ? pType + ' · ' + subLabels[pSub] : subLabels[pSub]) : pType,
       idText: pId,
       descText: pDesc,
       status: pStatus,
@@ -2480,9 +2480,34 @@ if (!isCust) {
       </div>`,
 
     'Release': `
+      <!-- Approval trace — progressStatus 기반 동적 상태 표시 (done / current(진행중) / pending / rejected) -->
+      <div class="hoo-spec-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>Approval Trace</h5>
+      </div>
+      <div class="rel-trace">
+        ${(() => {
+          const traceRoles = isFG
+            ? ['Product Management', 'Technologist', 'Supply Chain', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance']
+            : ['Quality', 'Product Management', 'Supply Chain', 'Sourcing', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance'];
+          const stateClass = { done:'rel-trace-done', current:'rel-trace-inprogress', pending:'rel-trace-pending', rejected:'rel-trace-rejected' };
+          const displayName = role => role === 'Customs(GTC)' ? 'Customs (GTC)' : role;
+          return traceRoles.map(role => {
+            const state = progressStatus[role] || 'pending';
+            const cls = stateClass[state] || 'rel-trace-pending';
+            const icon = state === 'rejected' ? 'cancel' : (stageIcons[role] || 'check_circle');
+            const p = personMap[role] || { name:'—', date:'' };
+            const meta = state === 'done'    ? `${p.name} · ${p.date}`
+                       : state === 'current' ? `${p.name} · in progress`
+                       : state === 'rejected' ? `${p.name} · rejected`
+                       : 'pending';
+            return `<div class="rel-trace-item ${cls}"><i class="material-icons">${icon}</i><div><b>${displayName(role)}</b><small>${meta}</small></div></div>`;
+          }).join('');
+        })()}
+      </div>
+
       ${pStatus === 'approved' ? `
       <!-- Parent Code Info — Basic Info PARENT CODE INFO 와 매칭 -->
-      <div class="hoo-spec-head">
+      <div class="hoo-spec-head hoo-spec-head--gap">
         <h5 class="bi-block-title"><span class="bi-bar"></span>Parent Code Info</h5>
         <div class="hoo-spec-tools">
           <span class="rel-status rel-status-ready">Ready for posting</span>
@@ -2616,35 +2641,7 @@ if (!isCust) {
         <div class="rel-skeleton-title">Master record awaits final approval</div>
         <div class="rel-skeleton-sub">All approval steps must be complete before the master record is generated.</div>
       </div>
-      `}
-
-      <!-- Approval trace — progressStatus 기반 동적 상태 표시 (done / current(진행중) / pending / rejected) -->
-      <div class="hoo-spec-head hoo-spec-head--gap">
-        <h5 class="bi-block-title"><span class="bi-bar"></span>Approval Trace</h5>
-      </div>
-      <div class="rel-trace">
-        ${(() => {
-          const traceRoles = isFG
-            ? ['Product Management', 'Technologist', 'Supply Chain', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance']
-            : ['Quality', 'Product Management', 'Supply Chain', 'Sourcing', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance'];
-          const stateClass = { done:'rel-trace-done', current:'rel-trace-inprogress', pending:'rel-trace-pending', rejected:'rel-trace-rejected' };
-          const displayName = role => role === 'Customs(GTC)' ? 'Customs (GTC)' : role;
-          return traceRoles.map(role => {
-            const state = progressStatus[role] || 'pending';
-            const cls = stateClass[state] || 'rel-trace-pending';
-            const icon = state === 'rejected' ? 'cancel' : (stageIcons[role] || 'check_circle');
-            const p = personMap[role] || { name:'—', date:'' };
-            const meta = state === 'done'    ? `${p.name} · ${p.date}`
-                       : state === 'current' ? `${p.name} · in progress`
-                       : state === 'rejected' ? `${p.name} · rejected`
-                       : 'pending';
-            return `<div class="rel-trace-item ${cls}"><i class="material-icons">${icon}</i><div><b>${displayName(role)}</b><small>${meta}</small></div></div>`;
-          }).join('');
-        })()}
-      </div>
-
-      <!-- Final release -->
-      <!-- removed -->`,
+      `}`,
   };
 
   function singleApprovalContent(role) {
@@ -3173,10 +3170,14 @@ if (!isCust) {
     initRouteClick();
     initRtCardGlass();
     initPMConfirmation();
-    /* 진행 중인 케이스 — currentNode stage 로 자동 스크롤 */
+    /* 진행 중인 케이스 — currentNode stage 로 자동 스크롤
+       완료(approved) 케이스 — 결과 요약인 Release stage 로 자동 스크롤 */
     if (pStatus === 'inprogress' && pCurrentNode) {
       const target = document.querySelector(`#stageSections .stage-section[data-role="${pCurrentNode}"]`)
                    || document.querySelector(`#stageSections .stage-section[data-roles*="${pCurrentNode}"]`);
+      if (target) setTimeout(() => smoothScrollTo(target), 120);
+    } else if (pStatus === 'approved') {
+      const target = document.querySelector(`#stageSections .stage-section[data-role="Release"]`);
       if (target) setTimeout(() => smoothScrollTo(target), 120);
     }
   });
