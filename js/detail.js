@@ -173,6 +173,8 @@ function autofillEmpty(section) {
   /* placeholder 텍스트가 라벨처럼 들어가는 케이스 차단 — 항상 sampleByLabel 우선 */
   section.querySelectorAll('input').forEach(inp => {
     if (inp.type === 'hidden' || inp.type === 'file' || inp.type === 'checkbox' || inp.type === 'radio') return;
+    /* Parent Code # / SKU-code # 는 최종 승인(approved) 후에만 발급되므로 빈 placeholder 유지 */
+    if (inp.id === 'parentCodeInput' || inp.classList.contains('cnt-matnum')) return;
     if (!inp.value) inp.value = sampleByLabel(inferLabel(inp));
   });
   section.querySelectorAll('select').forEach(sel => {
