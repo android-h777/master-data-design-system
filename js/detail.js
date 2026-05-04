@@ -180,8 +180,14 @@ function autofillEmpty(section) {
   section.querySelectorAll('select').forEach(sel => {
     const cur = sel.options[sel.selectedIndex];
     if (!cur || !cur.value || cur.disabled) {
-      for (let i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value && !sel.options[i].disabled) { sel.selectedIndex = i; break; }
+      /* defaultSelected (HTML selected attribute) 가 명시된 옵션 우선 */
+      const defaultIdx = Array.from(sel.options).findIndex(o => o.defaultSelected && o.value);
+      if (defaultIdx !== -1) {
+        sel.selectedIndex = defaultIdx;
+      } else {
+        for (let i = 0; i < sel.options.length; i++) {
+          if (sel.options[i].value && !sel.options[i].disabled) { sel.selectedIndex = i; break; }
+        }
       }
     }
   });
@@ -823,7 +829,7 @@ if (!isCust) {
 
         <div class="parent-code-children">
           <div class="bi-block-head pcc-head">
-            <h5 class="bi-block-title pcc-title"><span class="bi-bar"></span>SKU-CODE<span class="pcc-count" id="skuCodeCount">2</span></h5>
+            <h5 class="bi-block-title pcc-title"><span class="bi-bar"></span>SKU-CODE<span class="pcc-count" id="skuCodeCount">${productModel.skuList.length}</span></h5>
             <div class="bi-block-meta">
               <a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light" id="biAddContainer"><i class="material-icons">add</i><span class="label">Add row</span></a>
             </div>
@@ -2565,11 +2571,12 @@ if (!isCust) {
   function clearBasicInfo() {
     const biPanel = document.getElementById('basicInfoPanel');
     if (!biPanel) return;
-    biPanel.querySelectorAll('.hoo-table tbody tr').forEach(r => r.remove());
-    const compTotal = biPanel.querySelector('#compTotal');
-    if (compTotal) compTotal.textContent = '0%';
-    biPanel.querySelectorAll('input:not([readonly]), textarea').forEach(el => { el.value = ''; });
-    biPanel.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
+    /* productModel 기반으로 마크업에 박힌 값 (mat-name-input, Reason textarea) 은 보존.
+       Composition / SKU 표는 productModel 동적 렌더라 행 자체도 유지 (BulkInfo 의 옛 reset 의도는
+       사용자 직접 입력 흐름이었지만, 지금 mock 은 항상 진행 중 상태라 빈 form 시점이 없음) */
+    biPanel.querySelectorAll('input:not([readonly]):not(.mat-name-input)').forEach(el => { el.value = ''; });
+    /* select 는 우리 productModel 마크업이 selected 박은 것 보존 (selectedIndex 0 reset 하지 않음).
+       defaultSelected attribute 가 우리 마크업의 sku.containerCode / uom 매칭 옵션에 박혀있음 */
     M.FormSelect.init(biPanel.querySelectorAll('select'));
   }
   function fillBasicInfo() {
@@ -3056,7 +3063,13 @@ if (!isCust) {
     renderRouting();
     renderStageSections();
     captureBasicInfo();
-    clearBasicInfo();
+    /* clearBasicInfo() 는 "진짜 신규 등록 + DV 미완료" 시점에만 — 그 외엔 productModel 마크업 보존
+       (이미 진행 중인 MR 진입 시 form 이 빈 채로 보이지 않도록) */
+    {
+      const reqState0 = progressStatus['Request'] || 'pending';
+      const alreadyDone0 = pStatus === 'approved' || pStatus === 'rejected' || reqState0 === 'done';
+      if (pSub === 'new' && !alreadyDone0) clearBasicInfo();
+    }
     applyStageModes();
     applyVerifyGate();
     if (pDv === 'verified') presetDvVerified();
