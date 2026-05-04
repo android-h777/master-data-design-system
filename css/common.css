@@ -1125,6 +1125,25 @@ button{ font-family: inherit; }
   border: 1px solid var(--c-border);
   border-radius: 999px;
 }
+/* FG Parent 검색 시 SKU 카운트 뱃지 — Quiet Violet 톤으로 강조 */
+.base-mtl-list .mtl-sku-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-primary-d);
+  background: rgba(126, 111, 168, 0.12);
+  border: 1px solid rgba(126, 111, 168, 0.32);
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.base-mtl-list .mtl-sku-badge i{
+  font-size: 14px;
+  line-height: 1;
+}
 
 /* ===== Customer/Vendor Change — Step 3 영역 선택 ===== */
 .cv-step3-intro{
@@ -2212,6 +2231,17 @@ button{ font-family: inherit; }
 .rt-circle.active i{
   color: var(--c-primary-d);
 }
+.rt-circle.rejected i{
+  color: var(--c-danger);
+}
+.rt-card.rt-sub-rejected{
+  background: rgba(212, 95, 95, 0.08);
+  border-color: rgba(212, 95, 95, 0.32);
+}
+.rt-card.rt-sub-rejected .rt-role,
+.rt-card.rt-sub-rejected .rt-name{
+  color: #A53939;
+}
 .rt-stage-label{
   font-size: 13px;
   font-weight: 700;
@@ -2884,6 +2914,46 @@ button{ font-family: inherit; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
+/* ===== Dropzone-textarea — Material 의 dropzone 카드 패턴을 textarea 입력 카드로 변형
+   FG/SemiFG 모드에서 TDS+MSDS 두 슬롯 자리에 통합된 Product Specifications 카드 ===== */
+.dropzone.dropzone-textarea{
+  grid-column: span 2;
+  cursor: default;
+  border-style: solid;
+}
+.dropzone.dropzone-textarea:hover{
+  border-color: var(--c-border-strong);
+  background: rgba(255,255,255,0.6);
+}
+.dropzone.dropzone-textarea .dz-body{
+  flex: 1;
+  display: flex;
+  margin-top: 10px;
+}
+.dropzone.dropzone-textarea .fg-spec-textarea{
+  flex: 1;
+  width: 100%;
+  min-height: 90px;
+  margin: 0;
+  background: rgba(255,255,255,0.5);
+}
+.dropzone.dropzone-textarea .fg-spec-textarea:focus{
+  background: rgba(255,255,255,0.85);
+}
+/* Dropzone view 모드 — has-file 첨부된 파일만 보여주는 read-only 상태.
+   Technologist stage 처럼 이전 단계에서 이미 검증된 문서들을 viewer 처럼 노출 */
+.dropzone.is-readonly{
+  cursor: default;
+  border-style: solid;
+  border-color: var(--c-border);
+}
+.dropzone.is-readonly:hover{
+  border-color: var(--c-border);
+  background: rgba(255,255,255,0.6);
+}
+.dropzone.is-readonly .dz-file .f-rm{
+  display: none;
+}
 .dropzone{
   position: relative;
   min-height: 160px;
@@ -3309,6 +3379,42 @@ button{ font-family: inherit; }
 .d-sim.mid .d-sim-pct{ color: #8A6508; }
 .d-sim.low .d-sim-fill{ background: var(--c-success); }
 .d-sim.low .d-sim-pct{ color: #456b0a; }
+/* ===== FG Compare Modal — 헤드 카드 안 토큰 strip (Brand · Product · Container · Spec)
+   NEW REQUEST 는 회색(기준), EXISTING 은 일치 토큰만 초록 / 불일치 빨강 컬러로 비교 강조 ===== */
+.cmp2-head-tokens{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.cmp2-tok-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(102, 112, 130, 0.08);
+  color: var(--c-text-soft);
+  border: 1px solid var(--c-border);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.cmp2-tok-chip i{
+  font-size: 12px;
+  line-height: 1;
+}
+.cmp2-tok-chip.eq{
+  background: rgba(127, 156, 100, 0.12);
+  color: #4F6A38;
+  border-color: rgba(127, 156, 100, 0.32);
+}
+.cmp2-tok-chip.df{
+  background: rgba(212, 95, 95, 0.10);
+  color: #A53939;
+  border-color: rgba(212, 95, 95, 0.30);
+}
 /* ===== Duplicate Confirm — 책임 강조 패턴 ===== */
 .dup-confirm{
   margin-top: 20px;
@@ -3584,7 +3690,7 @@ button{ font-family: inherit; }
   background-position: 32px 0;
   background-repeat: no-repeat;
   background-size: calc(100% - 32px) 100%;
-  border: 2px solid rgba(126,111,168,0.22);
+  /* border: 2px solid rgba(126,111,168,0.22); */
   border-top: 1px dashed rgba(126,111,168,0.40);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   box-shadow:
@@ -4290,13 +4396,14 @@ button{ font-family: inherit; }
   gap: 4px;
   padding: 8px 4px;
   border-radius: 8px;
-  opacity: 0.35;
-  filter: grayscale(0.6);
-  transition: opacity .15s, filter .15s;
+  color: #B5B5B0;
+  transition: color .15s;
 }
 .ehs-picto.ehs-picto-on{
-  opacity: 1;
-  filter: none;
+  color: var(--c-danger);
+}
+.ehs-picto.ehs-picto-on span{
+  color: var(--c-danger);
 }
 .ehs-picto svg{ width: 56px; height: 56px; }
 .ehs-picto span{
@@ -4874,6 +4981,40 @@ button{ font-family: inherit; }
   background: #3a6a4a;
   color: #fff;
 }
+/* In-progress — Quiet Violet 톤 (현재 처리 중) */
+.rel-trace-inprogress{
+  background: rgba(126, 111, 168, 0.08);
+  border-color: rgba(126, 111, 168, 0.32);
+  box-shadow: 0 0 0 2px rgba(126, 111, 168, 0.10);
+}
+.rel-trace-inprogress i{
+  background: var(--c-primary-d);
+  color: #fff;
+  animation: rel-trace-pulse 1.6s ease-in-out infinite;
+}
+@keyframes rel-trace-pulse{
+  0%, 100% { box-shadow: 0 0 0 0 rgba(126, 111, 168, 0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(126, 111, 168, 0); }
+}
+/* Pending — 미진입, 비활성 회색 */
+.rel-trace-pending{
+  background: rgba(255, 255, 255, 0.5);
+  border-color: var(--c-border);
+  opacity: 0.65;
+}
+.rel-trace-pending i{
+  background: var(--c-border);
+  color: var(--c-text-mute);
+}
+/* Rejected — 빨강 */
+.rel-trace-rejected{
+  background: rgba(212, 95, 95, 0.08);
+  border-color: rgba(212, 95, 95, 0.35);
+}
+.rel-trace-rejected i{
+  background: var(--c-danger);
+  color: #fff;
+}
 
 /* Final release card */
 
@@ -5437,6 +5578,14 @@ html{ scroll-behavior:smooth; }
 .form-group.span-2{ grid-column:span 2; }
 .form-group--gap{ margin-top:10px; }
 .hoo-spec-head--gap{ margin-top:20px; }
+/* Composition read-only % 표시 — Basic Info 의 input 자리에 단순 텍스트 (Release / 다른 viewer 영역) */
+.comp-pct-readonly{
+  font-weight: 700;
+  min-width: 45px;
+  text-align: right;
+  color: var(--c-text);
+  font-size: 13px;
+}
 .log-route--gap{ margin-top:15px; }
 
 /* ── Tighter form rhythm — 안정 토큰 보존 ── */
@@ -5640,11 +5789,13 @@ html{ scroll-behavior:smooth; }
 .doc-verify-inline.is-verified > .dv-stepper,
 .doc-verify-inline.is-verified > .dv-panels{ display: none; }
 
-/* ===== Compare modal v2 (composition diff focus) ===== */
+/* ===== Compare modal v2 (composition diff focus) =====
+   width / max-height 만 CSS 로 — top 위치는 Materialize Modal init 옵션 (endingTop) 으로 처리.
+   top !important 로 Materialize transform 깨면 안 됨 */
 .search-modal.cmp-modal{
   width: 920px !important;
   max-width: 96vw !important;
-  max-height: 90vh !important;
+  max-height: 92vh !important;
   display: flex !important;
   flex-direction: column;
 }
@@ -5658,10 +5809,25 @@ html{ scroll-behavior:smooth; }
   font-size: 22px;
   color: var(--c-primary-d);
 }
+/* cmp-body 는 flex column 컨테이너만 — summary/headrow/foot 은 고정,
+   composition 비교 리스트(.cmp2-body) 만 내부 스크롤 발생 */
 .cmp-body{
   padding: 20px 25px !important;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.cmp-body > .cmp2-summary,
+.cmp-body > .cmp2-headrow,
+.cmp-body > .cmp2-foot{
+  flex-shrink: 0;
+}
+.cmp2-body{
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 .cmp2-summary{
   display: grid;

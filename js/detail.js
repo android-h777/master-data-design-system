@@ -358,9 +358,158 @@ if (!isCust) {
     });
     return routing;
   }
+  const isFG = (pType === 'Finished Goods' || pType === 'Semi-Finished');
+
+  /* type 별 단일 source of truth — Material Name 인풋, Container 행, Composition Rate,
+     Compliance form, PM·Release stage 등 모든 값/라벨 분기에 사용.
+     Compare 모달의 REQUEST_FG.composition / REQUEST_MATERIAL.composition 과 같은 값 공유 */
+  const FG_COMPOSITION = [
+    { cas:'4420-74-0',    chem:'3-MERCAPTOPROPYLTRIMETHOXYSILANE',           pct:75   },
+    { cas:'112945-52-5',  chem:'FUMED SILICA',                                pct:8    },
+    { cas:'67-56-1',      chem:'METHANOL',                                    pct:5    },
+    { cas:'78-10-4',      chem:'TETRAETHYL ORTHOSILICATE',                    pct:3    },
+    { cas:'471-34-1',     chem:'CALCIUM CARBONATE',                           pct:2    },
+    { cas:'556-67-2',     chem:'OCTAMETHYLCYCLOTETRASILOXANE',                pct:2    },
+    { cas:'1185-55-3',    chem:'METHYLTRIMETHOXYSILANE',                      pct:2    },
+    { cas:'128-37-0',     chem:'2,6-DI-TERT-BUTYL-P-CRESOL',                  pct:1    },
+    { cas:'77-58-7',      chem:'DIBUTYLTIN DILAURATE',                        pct:1    },
+    { cas:'63148-62-9',   chem:'POLYDIMETHYLSILOXANE',                        pct:1    },
+  ];
+  const MAT_COMPOSITION = [
+    { cas:'541-05-9', chem:'HEXAMETHYLCYCLOTRISILOXANE',  pct:98 },
+    { cas:'556-67-2', chem:'OCTAMETHYLCYCLOTETRASILOXANE', pct:2  },
+  ];
+  const productModel = isFG ? {
+    nameLabel:        'Product Name',
+    parentCodeLabel:  'Parent FG Code',
+    parentNameLabel:  'Parent FG Name',
+    fullName:         'SILQUEST GAMMA-MPS SILANE',
+    spec:             'GAMMA-MPS',
+    substance:        'SILQUEST',
+    descLine:         'SILQUEST GAMMA-MPS SILANE',
+    cnt1Name:         'SILQUEST GAMMA-MPS SILANE / DRUM / 180 KG',
+    cnt2Name:         'SILQUEST GAMMA-MPS SILANE / BULK',
+    reasonText:       'New finished good required for adhesive primer line. Customer Acme Poly qualified; composition sheet received with full BOM.',
+    composition:      FG_COMPOSITION,
+    /* Product Management 용 — 완제품 기준 (판매·application 중심) */
+    pm: {
+      materialTypeOptionsHtml: '<option>Raw Material</option><option>Semi-Finished</option><option selected>Finished Goods</option>',
+      usageLabel: 'Application',
+      usageOptionsHtml: '<option selected>Adhesive Primer</option><option>Sealant</option><option>Coating</option><option>Industrial</option>',
+      priceLabel: 'Selling price',
+      productTextsValue: 'Mercapto-functional silane coupling agent for adhesion promotion. Formulated for ambient-cure adhesive systems. Store in cool, dry, well-ventilated area.',
+      confirmItems: [
+        'Selling price with currency',
+        'Update product texts',
+        'Application &amp; target customer',
+        'Pricing margin reviewed',
+        "Validate requestor's tab information",
+      ],
+    },
+    /* Release 용 — 완제품 기준 (자체 생산, 한국 plants).
+       KCC SAP Material Code 양식: 5–6자리 숫자 (캡쳐의 50825 / 60842 / 66479 패턴) */
+    release: {
+      parentCode:        '60842',
+      manufactureLabel:  'Manufacturing Site',
+      manufactureValue:  'KCC Otha Plant',
+      hsCode:            '3824.99-9930',
+      unNumber:          'Non-hazardous',
+      variants: [
+        {
+          packLabel:'Drum', packPillCls:'',
+          code:'60843',
+          packUnit:'200L Steel Drum',
+          netGross:'16,000 / 17,800 kg',
+          moq:'80 drums',
+          stdCost:'$8.50 / kg',
+          plants:[
+            { code:'OTHA',   loc:'FG-A1 · Finished Liquid A' },
+            { code:'GUNSAN', loc:'FG-B1 · Finished Liquid'   },
+          ],
+        },
+        {
+          packLabel:'Bulk', packPillCls:'sc-pack-bulk',
+          code:'60844',
+          packUnit:'ISO Tank / IBC',
+          netGross:'20,000 / 24,400 kg',
+          moq:'1 tank / 20 IBC',
+          stdCost:'$8.20 / kg',
+          plants:[
+            { code:'OTHA',   loc:'FG-A3 · Bulk Tank A' },
+            { code:'GUNSAN', loc:'FG-B2 · Bulk Tank'   },
+          ],
+        },
+      ],
+    },
+  } : {
+    nameLabel:        'Material Name',
+    parentCodeLabel:  'Parent RM Code',
+    parentNameLabel:  'Parent RM Name',
+    fullName:         'TETRAMETHYL ORTHOSILICATE CFS-845',
+    spec:             'CFS-845',
+    substance:        'Tetramethyl orthosilicate',
+    descLine:         'Tetramethyl orthosilicate CFS-845',
+    cnt1Name:         'TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 180 KG',
+    cnt2Name:         'TETRAMETHYL ORTHOSILICATE CFS-845 / BULK',
+    reasonText:       'New raw material required for GS3723(A) formulation. Supplier qualified; TDS/MSDS/composition received.',
+    composition:      MAT_COMPOSITION,
+    /* Product Management 용 — 원자재 기준 (구매·usage 중심) */
+    pm: {
+      materialTypeOptionsHtml: '<option selected>Raw Material</option><option>Semi-Finished</option><option>Finished Goods</option>',
+      usageLabel: 'Material Usage',
+      usageOptionsHtml: '<option selected>Raw ingredient</option><option>Catalyst</option><option>Solvent</option>',
+      priceLabel: 'Purchase price',
+      productTextsValue: 'High-purity orthosilicate ester. Use within 6 months of opening. Store in cool, dry, well-ventilated area.',
+      confirmItems: [
+        'ASP with currency',
+        'Update product texts',
+        'Material usage',
+        'Product management data',
+        "Validate requestor's tab information",
+      ],
+    },
+    /* Release 용 — 원자재 기준 (외부 vendor 구매, US plants).
+       KCC SAP Material Code 양식: 5–6자리 숫자 */
+    release: {
+      parentCode:        '45118',
+      manufactureLabel:  'Vendor',
+      manufactureValue:  'Hubei Co-Formula Material Tech Co., Ltd.',
+      hsCode:            '2920.90-9000',
+      unNumber:          'UN 2920 · Class 3 / II',
+      variants: [
+        {
+          packLabel:'Drum', packPillCls:'',
+          code:'45119',
+          packUnit:'200L Steel Drum',
+          netGross:'16,000 / 17,800 kg',
+          moq:'80 drums',
+          stdCost:'$3.78 / kg',
+          plants:[
+            { code:'WTFD', loc:'RM-A1 · Raw Liquid A' },
+            { code:'SVLL', loc:'RM-B1 · Raw Liquid'   },
+          ],
+        },
+        {
+          packLabel:'Bulk', packPillCls:'sc-pack-bulk',
+          code:'45120',
+          packUnit:'ISO Tank / IBC',
+          netGross:'20,000 / 24,400 kg',
+          moq:'1 tank / 20 IBC',
+          stdCost:'$3.62 / kg',
+          plants:[
+            { code:'WTFD', loc:'RM-A3 · Bulk Tank A' },
+            { code:'SVLL', loc:'RM-B2 · Bulk Tank'   },
+          ],
+        },
+      ],
+    },
+  };
+  /* CAS 두 개 강조 표시 (Release stage 의 rel-master-val 에서 사용) */
+  const productModelCasList = productModel.composition.slice(0, 2).map(c => c.cas).join(' · ');
+
   const routingData = {};
   Object.keys(processFlows).forEach(key => {
-    routingData[key] = buildRoutingData(processFlows[key], key);
+    routingData[key] = buildRoutingData(isFG ? finishedGoodsFlow : processFlows[key], key);
   });
 
   function buildProgressStatus(flow, currentNode, status) {
@@ -393,7 +542,7 @@ if (!isCust) {
     });
     return result;
   }
-  const currentFlow = processFlows[pSub] || processFlows['new'];
+  const currentFlow = isFG ? finishedGoodsFlow : (processFlows[pSub] || processFlows['new']);
   const progressStatus = buildProgressStatus(currentFlow, pCurrentNode, pStatus);
 
   function renderRouting() {
@@ -405,18 +554,32 @@ if (!isCust) {
       const [label, roles, parallel] = stage;
       const roleStatuses = roles.map(r => progressStatus[r] || 'pending');
       const allDone = roleStatuses.every(s => s === 'done');
+      const anyRejected = roleStatuses.some(s => s === 'rejected');
       const anyActive = roleStatuses.some(s => s === 'done' || s === 'current');
       let stageState = 'pending';
-      if (allDone) stageState = 'done';
+      if (anyRejected) stageState = 'rejected';
+      else if (allDone) stageState = 'done';
       else if (anyActive) stageState = 'active';
-      const stageIco = stageState === 'done' ? 'check_circle' : (stageState === 'active' ? 'play_circle' : 'radio_button_unchecked');
-      const stageClass = stageState === 'done' ? ' done' : (stageState === 'active' ? ' active' : '');
+      const stageIco = stageState === 'rejected' ? 'cancel'
+                     : stageState === 'done' ? 'check_circle'
+                     : stageState === 'active' ? 'play_circle'
+                     : 'radio_button_unchecked';
+      const stageClass = stageState === 'rejected' ? ' rejected'
+                       : stageState === 'done' ? ' done'
+                       : stageState === 'active' ? ' active'
+                       : '';
 
       function cardHtml(role, secI, showCircle) {
         const p = personMap[role] || { name:'TBD' };
         const st = progressStatus[role] || 'pending';
-        const subIco = st === 'done' ? 'check_circle' : (st === 'current' ? 'play_circle' : 'radio_button_unchecked');
-        const subCls = st === 'done' ? ' rt-sub-done' : (st === 'current' ? ' rt-sub-current' : '');
+        const subIco = st === 'rejected' ? 'cancel'
+                     : st === 'done' ? 'check_circle'
+                     : st === 'current' ? 'play_circle'
+                     : 'radio_button_unchecked';
+        const subCls = st === 'rejected' ? ' rt-sub-rejected'
+                     : st === 'done' ? ' rt-sub-done'
+                     : st === 'current' ? ' rt-sub-current'
+                     : '';
         if (showCircle) {
           return `<div class="rt-card waves-effect${subCls}" data-section="${secI}">
             <i class="material-icons rt-sub-circle${subCls}">${subIco}</i>
@@ -459,6 +622,7 @@ if (!isCust) {
     'Request':'edit_note','Material Master':'admin_panel_settings','Dept. Review':'groups',
     'Evaluation':'checklist','Compliance':'verified_user','Finance':'account_balance',
     'Release':'rocket_launch','Product Management':'category','Quality':'verified',
+    'Technologist':'engineering',
     'Supply Chain':'local_shipping','Sourcing':'shopping_cart','Customs(GTC)':'public',
     'EHS':'eco','Logistic':'warehouse','Production':'precision_manufacturing','Repack':'inventory_2',
   };
@@ -483,8 +647,13 @@ if (!isCust) {
         <div class="dv-inline-intro">
           <div class="dvc-text">
             <span class="ai-badge"><i class="material-icons">bolt</i>AI-Agent</span>
+            ${isFG ? `
+            <b>Product Code Creation Details</b>
+            <span>Please provide technical requirements and the composition file to initiate code registration. Our AI extracts product details and scans Material Master for similar formulations.</span>
+            ` : `
             <b>Smart document review &amp; duplicate detection</b>
             <span>Upload TDS / MSDS / Composition — our AI extracts fields, auto-fills the form, and scans Material Master for duplicates.</span>
+            `}
           </div>
         </div>
 
@@ -505,6 +674,20 @@ if (!isCust) {
         <div class="dv-panels">
           <div class="dv-panel is-active" data-panel="1">
             <div class="dz-grid">
+              ${isFG ? `
+              <div class="dropzone dropzone-textarea" data-kind="Spec">
+                <div class="dz-head">
+                  <div class="dz-icon">REQ</div>
+                  <div>
+                    <div class="dz-title">Product Specifications<span class="req">*</span></div>
+                    <div class="dz-sub">Customer needs · technical requirements</div>
+                  </div>
+                </div>
+                <div class="dz-body">
+                  <textarea class="detail-textarea fg-spec-textarea" id="fgSpecText" placeholder="e.g., Customer Acme Poly needs SILQUEST A-1100 SILANE in TSP 16KG container with ≥99% purity for adhesive primer line. Annual demand ~12 tons, lead time 6 weeks."></textarea>
+                </div>
+              </div>
+              ` : `
               <div class="dropzone" id="dzTds" data-kind="Tds">
                 <div class="dz-head">
                   <div class="dz-icon">TDS</div>
@@ -537,6 +720,7 @@ if (!isCust) {
                 </div>
                 <input type="file" hidden id="inpMsds">
               </div>
+              `}
               <div class="dropzone" id="dzComp" data-kind="Comp">
                 <div class="dz-head">
                   <div class="dz-icon">CMP</div>
@@ -556,20 +740,63 @@ if (!isCust) {
             </div>
             <button class="hBtn hViolet btn-parse" id="parseBtn" disabled><i class="material-icons">auto_awesome</i><span class="label">Parse &amp; Auto-fill</span></button>
             <div class="dv-panel-actions">
-              <span class="dv-hint" id="dv1Hint">Upload 3 documents and click Parse to continue</span>
+              <span class="dv-hint" id="dv1Hint">${isFG ? 'Complete the description and attach the composition sheet to continue' : 'Upload 3 documents and click Parse to continue'}</span>
             </div>
           </div><!-- /panel 1 -->
 
           <div class="dv-panel" data-panel="2">
-            <p class="dv-hint-text">Scan existing Material Master for similar raw materials</p>
+            <p class="dv-hint-text">${isFG ? 'Scan existing Material Master for similar finished goods' : 'Scan existing Material Master for similar raw materials'}</p>
             <div id="dupEmpty" class="dup-empty">
               <div class="de-icon"><i class="material-icons icon-sm-32">content_copy</i></div>
               <div class="de-text">
                 <b>Duplicate check is waiting for document parsing</b>
-                <span>Upload TDS, MSDS and Composition Sheet above and run <i>Parse &amp; Auto-fill</i>. The system will then scan Material Master for candidates similar to this request.</span>
+                <span>${isFG ? 'Fill the product specifications and attach a Composition Sheet above, then run <i>Parse &amp; Auto-fill</i>. The system will scan Material Master for similar finished goods.' : 'Upload TDS, MSDS and Composition Sheet above and run <i>Parse &amp; Auto-fill</i>. The system will then scan Material Master for candidates similar to this request.'}</span>
               </div>
             </div>
             <div id="dupContent" class="dup-content">
+              ${isFG ? `
+              <div class="dup-summary">
+                <div class="ds-cell">
+                  <div class="ds-label">Brand</div>
+                  <div class="ds-value" id="dupBrand">—<small>from Composition</small></div>
+                </div>
+                <div class="ds-cell">
+                  <div class="ds-label">${productModel.nameLabel}</div>
+                  <div class="ds-value" id="dupProduct">—<small>from Composition</small></div>
+                </div>
+                <div class="ds-cell">
+                  <div class="ds-label">Functional Group</div>
+                  <div class="ds-value" id="dupFuncGroup">—<small>chemistry class</small></div>
+                </div>
+                <div class="ds-cell">
+                  <div class="ds-label">Main Component</div>
+                  <div class="ds-value" id="dupMainComp">—<small>highest weight %</small></div>
+                </div>
+              </div>
+              <div class="dup-head">
+                <span class="h-title">FG Similarity Scan — Description &amp; BOM</span>
+                <span class="h-info" id="dupScanInfo">—</span>
+              </div>
+              <div class="hoo-spec-table dup-spec-table">
+                <table class="hoo-table">
+                  <colgroup>
+                    <col style="width:110px">
+                    <col>
+                    <col style="width:170px">
+                    <col style="width:110px">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Mat. Code</th>
+                      <th>Description</th>
+                      <th>Similarity</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dupListFG"></tbody>
+                </table>
+              </div>
+              ` : `
               <div class="dup-summary">
                 <div class="ds-cell">
                   <div class="ds-label">Vendor</div>
@@ -613,6 +840,7 @@ if (!isCust) {
                   <tbody id="dupList"></tbody>
                 </table>
               </div>
+              `}
               <div class="dup-confirm" id="dupConfirm">
                 <div class="dup-confirm-warn">
                   <i class="material-icons">warning_amber</i>
@@ -644,18 +872,18 @@ if (!isCust) {
         <span class="pc-tag"><i class="material-icons">hub</i>PARENT</span>
         <div class="form-grid">
           <div class="form-group">
-            <label>Parent Code #</label>
-            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" placeholder="auto generate" readonly><span class="focus-border"></span></div>
+            <label>${productModel.parentCodeLabel}</label>
+            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" value="${productModel.release.parentCode}" placeholder="auto generate" readonly><span class="focus-border"></span></div>
           </div>
           <div class="form-group">
-            <label>Material Name</label>
-            <div class="aniInput"><input type="text" class="browser-default mat-name-input" value="TETRAMETHYL ORTHOSILICATE CFS-845" placeholder="from TDS"><span class="focus-border"></span></div>
+            <label>${productModel.parentNameLabel}</label>
+            <div class="aniInput"><input type="text" class="browser-default mat-name-input" value="${productModel.fullName}" placeholder="${isFG ? 'from Composition' : 'from TDS'}"><span class="focus-border"></span></div>
           </div>
         </div>
         <div class="form-grid">
           <div class="form-group span-2">
             <label>Reason for Request <span class="req">*</span></label>
-            <textarea class="detail-textarea" rows="4">New raw material required for GS3723(A) formulation. Supplier qualified; TDS/MSDS/composition received.</textarea>
+            <textarea class="detail-textarea" rows="4">${productModel.reasonText}</textarea>
           </div>
         </div>
         </div><!-- /parent-code-card -->
@@ -685,7 +913,7 @@ if (!isCust) {
                   <th class="hoo-th-num">Net Content</th>
                   <th>UOM</th>
                   <th>SKU-code #</th>
-                  <th>Material Name</th>
+                  <th>${productModel.nameLabel}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -714,8 +942,8 @@ if (!isCust) {
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 180 KG" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${productModel.release.variants[0].code}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt1Name}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
                 </tr>
                 <tr>
@@ -742,8 +970,8 @@ if (!isCust) {
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="TETRAMETHYL ORTHOSILICATE CFS-845 / BULK" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${productModel.release.variants[1].code}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt2Name}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
                 </tr>
               </tbody>
@@ -776,36 +1004,22 @@ if (!isCust) {
               </tr>
             </thead>
             <tbody>
+              ${productModel.composition.map((c, i) => `
               <tr>
-                <td class="hoo-no">1</td>
-                <td><div class="aniInput"><input type="text" class="browser-default comp-cas-input" value="541-05-9"><span class="focus-border"></span></div></td>
-                <td class="comp-chem">HEXAMETHYLCYCLOTRISILOXANE</td>
+                <td class="hoo-no">${i + 1}</td>
+                <td><div class="aniInput"><input type="text" class="browser-default comp-cas-input" value="${c.cas}"><span class="focus-border"></span></div></td>
+                <td class="comp-chem">${c.chem}</td>
                 <td>
                   <div class="hoo-bar-cell">
-                    <span class="comp-bar"><span class="comp-fill" style="width:98%"></span></span>
+                    <span class="comp-bar"><span class="comp-fill" style="width:${c.pct}%"></span></span>
                     <div class="comp-pct-input-wrap">
-                      <input type="number" min="0" max="100" step="0.1" class="browser-default comp-pct-input" value="98">
+                      <input type="number" min="0" max="100" step="0.1" class="browser-default comp-pct-input" value="${c.pct}">
                       <span class="comp-pct-suffix">%</span>
                     </div>
                   </div>
                 </td>
                 <td class="hoo-x"><i class="material-icons">close</i></td>
-              </tr>
-              <tr>
-                <td class="hoo-no">2</td>
-                <td><div class="aniInput"><input type="text" class="browser-default comp-cas-input" value="556-67-2"><span class="focus-border"></span></div></td>
-                <td class="comp-chem">OCTAMETHYLCYCLOTETRASILOXANE</td>
-                <td>
-                  <div class="hoo-bar-cell">
-                    <span class="comp-bar"><span class="comp-fill" style="width:2%"></span></span>
-                    <div class="comp-pct-input-wrap">
-                      <input type="number" min="0" max="100" step="0.1" class="browser-default comp-pct-input" value="2">
-                      <span class="comp-pct-suffix">%</span>
-                    </div>
-                  </div>
-                </td>
-                <td class="hoo-x"><i class="material-icons">close</i></td>
-              </tr>
+              </tr>`).join('')}
             </tbody>
             <tfoot>
               <tr class="hoo-tfoot-row">
@@ -924,15 +1138,15 @@ if (!isCust) {
         <div class="form-group"><label>Identical Substance</label>
           <div class="aniInput input-with-icon"><input type="text" class="browser-default" value="—" placeholder="None found"><span class="focus-border"></span><i class="material-icons input-icon">search</i></div>
         </div>
-        <div class="form-group"><label>Material Name</label>
-          <div class="aniInput"><input type="text" class="browser-default" value="Tetramethyl orthosilicate CFS-845"><span class="focus-border"></span></div>
+        <div class="form-group"><label>${productModel.nameLabel}</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="${productModel.descLine}"><span class="focus-border"></span></div>
         </div>
       </div>
       <h5 class="bi-block-title"><span class="bi-bar"></span>Production and Target Plant Matrix</h5>
       <div class="form-grid col-3">
         <div class="form-group"><label>Material</label><div class="aniInput"><input type="text" class="browser-default" value="—" placeholder="Auto-assigned on save"><span class="focus-border"></span></div></div>
-        <div class="form-group"><label>Description</label><div class="aniInput"><input type="text" class="browser-default" value="Tetramethyl orthosilicate"><span class="focus-border"></span></div></div>
-        <div class="form-group"><label>Substance Name</label><div class="aniInput"><input type="text" class="browser-default" value="CFS-845"><span class="focus-border"></span></div></div>
+        <div class="form-group"><label>Description</label><div class="aniInput"><input type="text" class="browser-default" value="${productModel.substance}"><span class="focus-border"></span></div></div>
+        <div class="form-group"><label>Substance Name</label><div class="aniInput"><input type="text" class="browser-default" value="${productModel.spec}"><span class="focus-border"></span></div></div>
       </div>
       <div class="form-grid col-6 form-grid--gap">
         <div class="form-group"><label>Container</label><select><option value="" disabled>Select</option><option selected>Drum</option><option>Bag</option><option>IBC</option></select></div>
@@ -949,13 +1163,13 @@ if (!isCust) {
         <div class="form-group">
           <label>Material Type by usage</label>
           <div class="pm-input-wrap">
-            <select><option selected>RAW</option><option>SEMI</option><option>FERT</option></select>
+            <select>${productModel.pm.materialTypeOptionsHtml}</select>
           </div>
         </div>
         <div class="form-group">
-          <label>Material Usage</label>
+          <label>${productModel.pm.usageLabel}</label>
           <div class="pm-input-wrap">
-            <select><option selected>Raw ingredient</option><option>Catalyst</option><option>Solvent</option></select>
+            <select>${productModel.pm.usageOptionsHtml}</select>
           </div>
         </div>
         <div class="form-group">
@@ -972,7 +1186,7 @@ if (!isCust) {
         </div>
         <div class="form-group span-2">
           <label>Product Texts (master memo)</label>
-          <textarea class="detail-textarea" rows="2" placeholder="Internal product description shared across all sizes...">High-purity orthosilicate ester. Use within 6 months of opening. Store in cool, dry, well-ventilated area.</textarea>
+          <textarea class="detail-textarea" rows="2" placeholder="Internal product description shared across all sizes...">${productModel.pm.productTextsValue}</textarea>
         </div>
       </div>
 
@@ -991,20 +1205,20 @@ if (!isCust) {
         </colgroup>
         <thead>
           <tr>
-            <th>Material Name</th>
+            <th>${productModel.nameLabel}</th>
             <th>MRP Group</th>
             <th>MOQ</th>
             <th>Delivery UOM</th>
             <th>Lead time<br><span class="hoo-th-sub">(days)</span></th>
             <th>Safety stock</th>
-            <th>Purchase price<br><span class="hoo-th-sub">(per UOM)</span></th>
+            <th>${productModel.pm.priceLabel}<br><span class="hoo-th-sub">(per UOM)</span></th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="pm-spec-name">
               <span class="pm-mat-pill">Mat#1</span>
-              <span class="pm-mat-text">TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 179.99 KG</span>
+              <span class="pm-mat-text">${isFG ? 'SILQUEST GAMMA-MPS SILANE / DRUM / 179.99 KG' : 'TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 179.99 KG'}</span>
             </td>
             <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option selected>MTO</option><option>MTS</option></select></div></td>
             <td><div class="aniInput"><input type="text" class="browser-default" value="180"><span class="focus-border"></span></div></td>
@@ -1019,7 +1233,7 @@ if (!isCust) {
           <tr>
             <td class="pm-spec-name">
               <span class="pm-mat-pill">Mat#2</span>
-              <span class="pm-mat-text">TETRAMETHYL ORTHOSILICATE CFS-845 / BULK</span>
+              <span class="pm-mat-text">${productModel.cnt2Name}</span>
             </td>
             <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option>MTO</option><option selected>MTS</option></select></div></td>
             <td><div class="aniInput"><input type="text" class="browser-default" value="5000"><span class="focus-border"></span></div></td>
@@ -1045,11 +1259,9 @@ if (!isCust) {
           </div>
         </div>
         <ul class="pm-check-list">
-          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">ASP with currency</span></label></li>
-          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Update product texts</span></label></li>
-          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Material usage</span></label></li>
-          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Product management data</span></label></li>
-          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Validate requestor's tab information</span></label></li>
+          ${productModel.pm.confirmItems.map(item =>
+            `<li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">${item}</span></label></li>`
+          ).join('')}
         </ul>
         <div class="pm-confirm-actions">
           <button class="hBtn hGrey waves-effect"><i class="material-icons">close</i><span class="label">Reject</span></button>
@@ -1194,6 +1406,124 @@ if (!isCust) {
           <button class="hBtn hGrey waves-effect"><i class="material-icons">close</i><span class="label">Reject</span></button>
           <button class="hBtn hViolet waves-effect pm-approve" disabled><i class="material-icons">check</i><span class="label">Approve</span></button>
         </div>
+      </div>`,
+
+    'Technologist': `
+      <!-- TECHNICAL DATA VALIDATION — NPI 기술검토 단계 (FG / SemiFG 만 노출).
+           Document Status (3 dropzones) → Technical Specs → Temp → Feasibility → Notes → Approval -->
+
+      <!-- Document Status — dropzone 패턴 그대로 (DV step 1 과 동일), 3개 문서:
+           BOM (Sales Request 자동 첨부), Recipe (필수), QM Inspection Plan (필수) -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>DOCUMENT STATUS</h5>
+        <div class="bi-block-meta">
+          <span class="bi-meta-text">3 documents required for technical review</span>
+        </div>
+      </div>
+      <div class="dz-grid">
+        <div class="dropzone has-file is-readonly" id="dzBom" data-kind="Bom">
+          <div class="dz-head">
+            <div class="dz-icon">BOM</div>
+            <div>
+              <div class="dz-title">BOM Data Sheet</div>
+              <div class="dz-sub">Auto-attached from Sales Request</div>
+            </div>
+          </div>
+          <div class="dz-body">
+            <div class="dz-file"><span class="f-mark"><i class="material-icons icon-sm-16">check</i></span><span class="f-name">SILQUEST_GAMMA_BOM.xlsx</span><span class="f-meta">42.1 KB</span></div>
+          </div>
+        </div>
+        <div class="dropzone has-file is-readonly" id="dzRecipe" data-kind="Recipe">
+          <div class="dz-head">
+            <div class="dz-icon">RCP</div>
+            <div>
+              <div class="dz-title">Recipe Data Sheet</div>
+              <div class="dz-sub">Verified for formula validation</div>
+            </div>
+          </div>
+          <div class="dz-body">
+            <div class="dz-file"><span class="f-mark"><i class="material-icons icon-sm-16">check</i></span><span class="f-name">SILQUEST_GAMMA_RECIPE_v3.xlsx</span><span class="f-meta">38.7 KB</span></div>
+          </div>
+        </div>
+        <div class="dropzone has-file is-readonly" id="dzQm" data-kind="Qm">
+          <div class="dz-head">
+            <div class="dz-icon">QM</div>
+            <div>
+              <div class="dz-title">QM Inspection Plan</div>
+              <div class="dz-sub">Approved by QM team</div>
+            </div>
+          </div>
+          <div class="dz-body">
+            <div class="dz-file"><span class="f-mark"><i class="material-icons icon-sm-16">check</i></span><span class="f-name">SILQUEST_GAMMA_QM_PLAN.pdf</span><span class="f-meta">52.3 KB</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical Specifications -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>TECHNICAL SPECIFICATIONS</h5>
+      </div>
+      <div class="form-grid col-4">
+        <div class="form-group">
+          <label>NPI Tracking #</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="NPI-2026-0042"><span class="focus-border"></span></div>
+        </div>
+        <div class="form-group">
+          <label>CAS # (Main Component)</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="${productModel.composition[0].cas}"><span class="focus-border"></span></div>
+        </div>
+        <div class="form-group">
+          <label>Total Shelf Life</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="12 Months"><span class="focus-border"></span></div>
+        </div>
+        <div class="form-group">
+          <label>Product Lifer</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="Multi-Stage"><span class="focus-border"></span></div>
+        </div>
+      </div>
+
+      <!-- Temperature Control -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>TEMPERATURE CONTROL (°C)</h5>
+      </div>
+      <div class="form-grid col-3">
+        <div class="form-group">
+          <label>Warehouse</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="15 ~ 25"><span class="focus-border"></span></div>
+        </div>
+        <div class="form-group">
+          <label>Shipment</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="10 ~ 35"><span class="focus-border"></span></div>
+        </div>
+        <div class="form-group">
+          <label>Customer Storage</label>
+          <div class="aniInput"><input type="text" class="browser-default" value="20 ~ 25"><span class="focus-border"></span></div>
+        </div>
+      </div>
+
+      <!-- Review Notes -->
+      <div class="form-grid">
+        <div class="form-group span-2">
+          <label>Review Notes</label>
+          <textarea class="detail-textarea" rows="4" placeholder="Enter technical details, concerns, or follow-up items..."></textarea>
+        </div>
+      </div>
+
+      <!-- Feasibility Checklist — Confirmation Checklist / Technical Approval 과 같은 카드 패턴 -->
+      <div class="pm-confirm-card">
+        <div class="pm-confirm-head">
+          <i class="material-icons">rule</i>
+          <div>
+            <div class="pm-confirm-title">Feasibility Checklist</div>
+            <div class="pm-confirm-sub">Confirm overall feasibility before submitting to Product Management.</div>
+          </div>
+        </div>
+        <ul class="pm-check-list">
+          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Formula Stability</span></label></li>
+          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Regulatory Compliance</span></label></li>
+          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Facility Compatibility</span></label></li>
+          <li><label class="pm-check"><input type="checkbox"><span class="pm-check-box"></span><span class="pm-check-label">Logistics Safety</span></label></li>
+        </ul>
       </div>`,
 
     'Supply Chain': `
@@ -1619,23 +1949,23 @@ if (!isCust) {
       <div class="ehs-ghs-grid">
         <div class="ehs-pictos" id="ehsPictos">
           <div class="ehs-picto ehs-picto-on" data-pic="flame" title="Flammable — click to toggle">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="#c0392b" stroke-width="3"/><path d="M32 16c-2 6-8 8-8 16 0 6 4 12 10 12 7 0 12-6 10-13-1-4-5-5-4-10-3 2-4 6-3 9-2-1-4-6-3-10 0-2 0-3-2-4z" fill="#e74c3c"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="currentColor" stroke-width="3"/><path d="M32 16c-2 6-8 8-8 16 0 6 4 12 10 12 7 0 12-6 10-13-1-4-5-5-4-10-3 2-4 6-3 9-2-1-4-6-3-10 0-2 0-3-2-4z" fill="currentColor"/></svg>
             <span>Flame</span>
           </div>
           <div class="ehs-picto ehs-picto-on" data-pic="health" title="Health hazard — click to toggle">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="#c0392b" stroke-width="3"/><circle cx="32" cy="22" r="6" fill="none" stroke="#c0392b" stroke-width="2.5"/><path d="M22 30h20l-4 22h-12z" fill="none" stroke="#c0392b" stroke-width="2.5"/><path d="M22 36h20" stroke="#c0392b" stroke-width="2.5"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="22" r="6" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M22 30h20l-4 22h-12z" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M22 36h20" stroke="currentColor" stroke-width="2.5"/></svg>
             <span>Health</span>
           </div>
           <div class="ehs-picto ehs-picto-on" data-pic="exclamation" title="Irritant — click to toggle">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="#c0392b" stroke-width="3"/><text x="32" y="42" text-anchor="middle" font-size="28" font-weight="700" fill="#c0392b">!</text></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="currentColor" stroke-width="3"/><text x="32" y="42" text-anchor="middle" font-size="28" font-weight="700" fill="currentColor">!</text></svg>
             <span>Irritant</span>
           </div>
           <div class="ehs-picto" data-pic="environment" title="Environment — click to toggle">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="#bdc3c7" stroke-width="3"/><path d="M16 44h32" stroke="#bdc3c7" stroke-width="2.5"/><path d="M22 38c4-2 6-6 4-12 4 2 8 2 12-2-2 6 0 10 4 12-6 0-10 4-12 8-2-4-4-6-8-6z" fill="none" stroke="#bdc3c7" stroke-width="2"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="currentColor" stroke-width="3"/><path d="M16 44h32" stroke="currentColor" stroke-width="2.5"/><path d="M22 38c4-2 6-6 4-12 4 2 8 2 12-2-2 6 0 10 4 12-6 0-10 4-12 8-2-4-4-6-8-6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             <span>Environ.</span>
           </div>
           <div class="ehs-picto" data-pic="corrosive" title="Corrosive — click to toggle">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="#bdc3c7" stroke-width="3"/><path d="M14 26l8-2 4 6-2 6-8 2z" fill="none" stroke="#bdc3c7" stroke-width="2"/><path d="M44 22l8 2-2 6-6 4-4-4z" fill="none" stroke="#bdc3c7" stroke-width="2"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 60,32 32,60 4,32" fill="#fff" stroke="currentColor" stroke-width="3"/><path d="M14 26l8-2 4 6-2 6-8 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M44 22l8 2-2 6-6 4-4-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             <span>Corrosive</span>
           </div>
         </div>
@@ -2142,9 +2472,9 @@ if (!isCust) {
       </div>`,
 
     'Release': `
-      <!-- Master / Parent Code -->
+      <!-- Parent Code Info — Basic Info PARENT CODE INFO 와 매칭 -->
       <div class="hoo-spec-head">
-        <h5 class="bi-block-title"><span class="bi-bar"></span>Master Record</h5>
+        <h5 class="bi-block-title"><span class="bi-bar"></span>Parent Code Info</h5>
         <div class="hoo-spec-tools">
           <span class="rel-status rel-status-ready">Ready for posting</span>
         </div>
@@ -2152,143 +2482,148 @@ if (!isCust) {
       <div class="rel-master-card">
         <div class="rel-master-row">
           <div class="rel-master-cell">
-            <div class="rel-master-label">Parent Code</div>
-            <div class="rel-master-code">SC-1022501</div>
+            <div class="rel-master-label">${productModel.parentCodeLabel}</div>
+            <div class="rel-master-code">${productModel.release.parentCode}</div>
           </div>
           <div class="rel-master-cell rel-master-name">
-            <div class="rel-master-label">Material Name</div>
-            <div class="rel-master-val">Tetramethyl orthosilicate CFS-845</div>
+            <div class="rel-master-label">${productModel.parentNameLabel}</div>
+            <div class="rel-master-val">${productModel.descLine}</div>
           </div>
           <div class="rel-master-cell">
             <div class="rel-master-label">Material Type</div>
-            <div class="rel-master-val">ROH · Raw Material</div>
+            <div class="rel-master-val">${isFG ? 'FERT · Finished Goods' : 'ROH · Raw Material'}</div>
           </div>
           <div class="rel-master-cell">
             <div class="rel-master-label">Substance</div>
-            <div class="rel-master-val">CFS-845</div>
+            <div class="rel-master-val">${productModel.spec}</div>
           </div>
         </div>
         <div class="rel-master-row rel-master-row-2">
           <div class="rel-master-cell">
             <div class="rel-master-label">CAS</div>
-            <div class="rel-master-val">541-05-9 · 556-67-2</div>
+            <div class="rel-master-val">${productModelCasList}</div>
           </div>
           <div class="rel-master-cell">
-            <div class="rel-master-label">Vendor</div>
-            <div class="rel-master-val">Hubei Co-Formula Material Tech Co., Ltd.</div>
+            <div class="rel-master-label">${productModel.release.manufactureLabel}</div>
+            <div class="rel-master-val">${productModel.release.manufactureValue}</div>
           </div>
           <div class="rel-master-cell">
             <div class="rel-master-label">HS Code</div>
-            <div class="rel-master-val">2920.90-9000</div>
+            <div class="rel-master-val">${productModel.release.hsCode}</div>
           </div>
           <div class="rel-master-cell">
             <div class="rel-master-label">UN Number</div>
-            <div class="rel-master-val">UN 2920 · Class 3 / II</div>
+            <div class="rel-master-val">${productModel.release.unNumber}</div>
           </div>
         </div>
       </div>
 
-      <!-- Composition -->
-      <div class="hoo-spec-head hoo-spec-head--gap">
-        <h5 class="bi-block-title"><span class="bi-bar"></span>Composition</h5>
-        <div class="hoo-spec-tools">
-          <span class="rel-meta">2 substances · sums to 100%</span>
-        </div>
-      </div>
-      <div class="rel-comp-card">
-        <div class="rel-comp-row">
-          <div class="rel-comp-cell rel-comp-cas">541-05-9</div>
-          <div class="rel-comp-cell rel-comp-name">Hexamethylcyclotrisiloxane (D3)</div>
-          <div class="rel-comp-cell rel-comp-pct">
-            <div class="rel-comp-bar"><span style="width:98%;"></span></div>
-            <b>98%</b>
+      <!-- SKU Codes — Parent Code Info 직속 child. Basic Info 의 parent-code-children
+           패턴 그대로 (vertical rail + node dot + 그라데이션 배경 으로 hierarchy 시각화) -->
+      <div class="parent-code-children">
+        <div class="bi-block-head pcc-head">
+          <h5 class="bi-block-title pcc-title"><span class="bi-bar"></span>SKU CODES<span class="pcc-count">${productModel.release.variants.length}</span></h5>
+          <div class="bi-block-meta">
+            <span class="rel-meta">${productModel.release.variants[0].plants.length} plants</span>
           </div>
         </div>
-        <div class="rel-comp-row">
-          <div class="rel-comp-cell rel-comp-cas">556-67-2</div>
-          <div class="rel-comp-cell rel-comp-name">Octamethylcyclotetrasiloxane (D4)</div>
-          <div class="rel-comp-cell rel-comp-pct">
-            <div class="rel-comp-bar"><span style="width:2%;"></span></div>
-            <b>2%</b>
-          </div>
-        </div>
-      </div>
-
-      <!-- Variant codes -->
-      <div class="hoo-spec-head hoo-spec-head--gap">
-        <h5 class="bi-block-title"><span class="bi-bar"></span>Material Codes</h5>
-        <div class="hoo-spec-tools">
-          <span class="rel-meta">2 material codes · 2 plants</span>
-        </div>
-      </div>
-      <div class="rel-variant-grid">
-        <div class="rel-variant">
-          <div class="rel-variant-head">
-            <span class="sc-pack-pill">Drum</span>
-            <span class="rel-variant-status rel-variant-status-new">NEW</span>
-          </div>
-          <div class="rel-variant-code">MAT-1022501-DR</div>
-          <ul class="rel-variant-meta">
-            <li><span>Pack Unit</span><b>200L Steel Drum</b></li>
-            <li><span>Net / Gross</span><b>16,000 / 17,800 kg</b></li>
-            <li><span>MOQ</span><b>80 drums</b></li>
-            <li><span>Std. Cost</span><b>$3.78 / kg</b></li>
-          </ul>
-          <div class="rel-variant-plants">
-            <div class="rel-variant-plants-label">Extended to plants</div>
-            <div class="rel-variant-plants-row">
-              <div class="rel-variant-plant">
-                <span class="sc-plant-pill">WTFD</span>
-                <span class="rel-variant-plant-loc">RM-A1 · Raw Liquid A</span>
-              </div>
-              <div class="rel-variant-plant">
-                <span class="sc-plant-pill">SVLL</span>
-                <span class="rel-variant-plant-loc">RM-B1 · Raw Liquid</span>
+        <div class="rel-variant-grid">
+          ${productModel.release.variants.map(v => `
+          <div class="rel-variant">
+            <div class="rel-variant-head">
+              <span class="sc-pack-pill ${v.packPillCls}">${v.packLabel}</span>
+              <span class="rel-variant-status rel-variant-status-new">NEW</span>
+            </div>
+            <div class="rel-variant-code">${v.code}</div>
+            <ul class="rel-variant-meta">
+              <li><span>Pack Unit</span><b>${v.packUnit}</b></li>
+              <li><span>Net / Gross</span><b>${v.netGross}</b></li>
+              <li><span>MOQ</span><b>${v.moq}</b></li>
+              <li><span>Std. Cost</span><b>${v.stdCost}</b></li>
+            </ul>
+            <div class="rel-variant-plants">
+              <div class="rel-variant-plants-label">Extended to plants</div>
+              <div class="rel-variant-plants-row">
+                ${v.plants.map(p => `
+                <div class="rel-variant-plant">
+                  <span class="sc-plant-pill">${p.code}</span>
+                  <span class="rel-variant-plant-loc">${p.loc}</span>
+                </div>`).join('')}
               </div>
             </div>
-          </div>
-        </div>
-        <div class="rel-variant">
-          <div class="rel-variant-head">
-            <span class="sc-pack-pill sc-pack-bulk">Bulk</span>
-            <span class="rel-variant-status rel-variant-status-new">NEW</span>
-          </div>
-          <div class="rel-variant-code">MAT-1022501-BK</div>
-          <ul class="rel-variant-meta">
-            <li><span>Pack Unit</span><b>ISO Tank / IBC</b></li>
-            <li><span>Net / Gross</span><b>20,000 / 24,400 kg</b></li>
-            <li><span>MOQ</span><b>1 tank / 20 IBC</b></li>
-            <li><span>Std. Cost</span><b>$3.62 / kg</b></li>
-          </ul>
-          <div class="rel-variant-plants">
-            <div class="rel-variant-plants-label">Extended to plants</div>
-            <div class="rel-variant-plants-row">
-              <div class="rel-variant-plant">
-                <span class="sc-plant-pill">WTFD</span>
-                <span class="rel-variant-plant-loc">RM-A3 · Bulk Tank A</span>
-              </div>
-              <div class="rel-variant-plant">
-                <span class="sc-plant-pill">SVLL</span>
-                <span class="rel-variant-plant-loc">RM-B2 · Bulk Tank</span>
-              </div>
-            </div>
-          </div>
+          </div>`).join('')}
         </div>
       </div>
 
-      <!-- Approval trace -->
+      <!-- Composition — Basic Info COMPOSITION RATE 와 같은 hoo-table 패턴 (read-only) -->
+      <div class="bi-block-head">
+        <h5 class="bi-block-title"><span class="bi-bar"></span>COMPOSITION</h5>
+        <div class="bi-block-meta">
+          <span class="rel-meta">${productModel.composition.length} substances · sums to 100%</span>
+        </div>
+      </div>
+      <div class="hoo-spec-table">
+        <table class="hoo-table">
+          <colgroup>
+            <col style="width:40px">
+            <col style="width:140px">
+            <col>
+            <col style="width:200px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>CAS Number</th>
+              <th>Chemical Name</th>
+              <th>Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${productModel.composition.map((c, i) => `
+            <tr>
+              <td class="hoo-no">${i + 1}</td>
+              <td>${c.cas}</td>
+              <td class="comp-chem">${c.chem}</td>
+              <td>
+                <div class="hoo-bar-cell">
+                  <span class="comp-bar"><span class="comp-fill" style="width:${c.pct}%"></span></span>
+                  <b class="comp-pct-readonly">${c.pct}%</b>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+          <tfoot>
+            <tr class="hoo-tfoot-row">
+              <td colspan="3" class="hoo-tfoot-label">TOTAL</td>
+              <td class="hoo-tfoot-value"><b>100%</b></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Approval trace — progressStatus 기반 동적 상태 표시 (done / current(진행중) / pending / rejected) -->
       <div class="hoo-spec-head hoo-spec-head--gap">
         <h5 class="bi-block-title"><span class="bi-bar"></span>Approval Trace</h5>
       </div>
       <div class="rel-trace">
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">verified</i><div><b>Quality</b><small>Lucas Foster · Feb 14, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">category</i><div><b>Product Management</b><small>Olivia Adams · Feb 14, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">local_shipping</i><div><b>Supply Chain</b><small>Mia Campbell · Feb 18, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">shopping_cart</i><div><b>Sourcing</b><small>Elliot Granville · Feb 18, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">public</i><div><b>Customs (GTC)</b><small>James Lee · Feb 25, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">eco</i><div><b>EHS</b><small>Jongho Lee · Feb 25, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">warehouse</i><div><b>Logistic</b><small>Ethan Brooks · Feb 27, 2026</small></div></div>
-        <div class="rel-trace-item rel-trace-done"><i class="material-icons">account_balance</i><div><b>Finance</b><small>Jongho Lee · Mar 05, 2026</small></div></div>
+        ${(() => {
+          const traceRoles = isFG
+            ? ['Technologist', 'Product Management', 'Supply Chain', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance']
+            : ['Quality', 'Product Management', 'Supply Chain', 'Sourcing', 'Customs(GTC)', 'EHS', 'Logistic', 'Finance'];
+          const stateClass = { done:'rel-trace-done', current:'rel-trace-inprogress', pending:'rel-trace-pending', rejected:'rel-trace-rejected' };
+          const displayName = role => role === 'Customs(GTC)' ? 'Customs (GTC)' : role;
+          return traceRoles.map(role => {
+            const state = progressStatus[role] || 'pending';
+            const cls = stateClass[state] || 'rel-trace-pending';
+            const icon = state === 'rejected' ? 'cancel' : (stageIcons[role] || 'check_circle');
+            const p = personMap[role] || { name:'—', date:'' };
+            const meta = state === 'done'    ? `${p.name} · ${p.date}`
+                       : state === 'current' ? `${p.name} · in progress`
+                       : state === 'rejected' ? `${p.name} · rejected`
+                       : 'pending';
+            return `<div class="rel-trace-item ${cls}"><i class="material-icons">${icon}</i><div><b>${displayName(role)}</b><small>${meta}</small></div></div>`;
+          }).join('');
+        })()}
       </div>
 
       <!-- Final release -->
@@ -2604,6 +2939,82 @@ if (!isCust) {
     });
   }
 
+  /* DV Step 2 (Duplicate Check) 데이터 채우기 — Material 모드 / FG·SemiFG 모드 분기.
+     append=true 이면 기존 행에 덧붙임 (runAutofill 흐름), false 이면 비어있을 때만 채움 (presetDvVerified 흐름) */
+  function fillDupData(isFGMode, append) {
+    const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+    const info = document.getElementById('dupScanInfo');
+
+    if (isFGMode) {
+      set('dupBrand',     'SILQUEST<small>from Composition</small>');
+      set('dupProduct',   'GAMMA-MPS SILANE<small>from Composition</small>');
+      set('dupFuncGroup', 'Mercapto Silane<small>chemistry class</small>');
+      set('dupMainComp',  '3-MPTMS <em class="cas-pct">75%</em><small>highest weight %</small>');
+      if (info) info.textContent = 'Scanned 4,820 parent FG codes · 4 closest candidates · all below 60% similarity';
+
+      const compareBtn = `<a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a>`;
+      const simCls = sim => sim >= 80 ? 'high' : sim >= 50 ? 'mid' : 'low';
+      const fgRows = `
+        <tr>
+          <td class="d-code">182501</td>
+          <td class="d-name">SILQUEST A-1100 SILANE<small>same brand · different functional group (amino)</small></td>
+          <td><div class="d-sim ${simCls(58)}"><div class="d-sim-bar"><div class="d-sim-fill" style="width:58%"></div></div><span class="d-sim-pct">58%</span></div></td>
+          <td>${compareBtn}</td>
+        </tr>
+        <tr>
+          <td class="d-code">182610</td>
+          <td class="d-name">DOWSIL Z-6020 SILANE<small>different brand · diamine functional group</small></td>
+          <td><div class="d-sim ${simCls(54)}"><div class="d-sim-bar"><div class="d-sim-fill" style="width:54%"></div></div><span class="d-sim-pct">54%</span></div></td>
+          <td>${compareBtn}</td>
+        </tr>
+        <tr>
+          <td class="d-code">182700</td>
+          <td class="d-name">SILQUEST A-1110 SILANE<small>same brand · phenyl-amino variant</small></td>
+          <td><div class="d-sim ${simCls(48)}"><div class="d-sim-bar"><div class="d-sim-fill" style="width:48%"></div></div><span class="d-sim-pct">48%</span></div></td>
+          <td>${compareBtn}</td>
+        </tr>
+        <tr>
+          <td class="d-code">182611</td>
+          <td class="d-name">KCC SILANE Pre-mix<small>PDMS-based · BOM partial overlap</small></td>
+          <td><div class="d-sim ${simCls(42)}"><div class="d-sim-bar"><div class="d-sim-fill" style="width:42%"></div></div><span class="d-sim-pct">42%</span></div></td>
+          <td>${compareBtn}</td>
+        </tr>`;
+      const fgEl = document.getElementById('dupListFG');
+      if (fgEl && (append || !fgEl.children.length)) fgEl.innerHTML = fgRows;
+      return;
+    }
+
+    /* Material mode (기존) */
+    set('dupVendor', 'Hubei Co-Formula Material Tech Co., Ltd.<small>from TDS</small>');
+    set('dupName',   'Tetramethyl orthosilicate<small>from TDS</small>');
+    set('dupSpec',   'CFS-845<small>from TDS</small>');
+    set('dupCas',    '541-05-9 <em class="cas-pct">98%</em><br>556-67-2 <em class="cas-pct">2%</em><small>from Composition Rate</small>');
+    if (info) info.textContent = 'Scanned 2,847 materials · 2 candidates found';
+
+    const matRows = `
+      <tr>
+        <td class="d-code">182441</td>
+        <td class="d-name">Tetramethyl orthosilicate CFS-820<small>CAS 681-84-5</small></td>
+        <td><div class="d-sim mid"><div class="d-sim-bar"><div class="d-sim-fill" style="width:65%"></div></div><span class="d-sim-pct">65%</span></div></td>
+        <td>WTFD · CFS Korea</td>
+        <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
+      </tr>
+      <tr>
+        <td class="d-code">183207</td>
+        <td class="d-name">Tetramethyl orthosilicate CFS-1200<small>CAS 681-84-5</small></td>
+        <td><div class="d-sim low"><div class="d-sim-bar"><div class="d-sim-fill" style="width:58%"></div></div><span class="d-sim-pct">58%</span></div></td>
+        <td>SVLL · CFS Korea</td>
+        <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
+      </tr>`;
+    const dupList = document.getElementById('dupList');
+    if (!dupList) return;
+    if (append) {
+      dupList.innerHTML += matRows;
+    } else if (!dupList.children.length) {
+      dupList.innerHTML = matRows;
+    }
+  }
+
   /* ?dv=verified — AI Document Verification 단계를 모두 마친 상태로 부팅
      (3개 파일 업로드 → Parse 완료 → Duplicate Check confirm → Proceed 클릭) */
   function presetDvVerified() {
@@ -2611,7 +3022,9 @@ if (!isCust) {
     if (!inline || inline.classList.contains('dv-inline-hidden')) return;
     if (inline.classList.contains('is-verified')) return;
 
-    const mockFiles = {
+    const mockFiles = isFG ? {
+      Comp: { name: 'SILQUEST_A-1100_SILANE_Composition.xlsx', size: 92400 },
+    } : {
       Tds:  { name: 'TETRAMETHYL_ORTHOSILICATE_CFS-845_TDS.pdf',          size: 248700 },
       Msds: { name: 'TETRAMETHYL_ORTHOSILICATE_CFS-845_MSDS.pdf',         size: 312400 },
       Comp: { name: 'TETRAMETHYL_ORTHOSILICATE_CFS-845_Composition.xlsx', size:  84200 },
@@ -2628,6 +3041,10 @@ if (!isCust) {
         `<span class="f-name">${f.name}</span><span class="f-meta">${(f.size / 1024).toFixed(1)} KB</span>` +
         `<button class="f-rm" onclick="removeFile('${kind}', event)"><i class="material-icons icon-sm-16">close</i></button></div>`;
     });
+    if (isFG) {
+      const specEl = document.getElementById('fgSpecText');
+      if (specEl) specEl.value = 'Customer Acme Poly needs SILQUEST A-1100 SILANE in TSP 16KG container with ≥99% purity for adhesive primer line. Equivalent to existing A-1100 family but new spec variant. Annual demand ~12 tons, lead time 6 weeks.';
+    }
 
     const parseBtn = document.getElementById('parseBtn');
     if (parseBtn) {
@@ -2641,31 +3058,7 @@ if (!isCust) {
     if (dupEmpty) dupEmpty.style.display = 'none';
     if (dupContent) {
       dupContent.style.display = 'block';
-      const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-      set('dupVendor', 'Hubei Co-Formula Material Tech Co., Ltd.<small>from TDS</small>');
-      set('dupName',   'Tetramethyl orthosilicate<small>from TDS</small>');
-      set('dupSpec',   'CFS-845<small>from TDS</small>');
-      set('dupCas',    '541-05-9 <em class="cas-pct">98%</em><br>556-67-2 <em class="cas-pct">2%</em><small>from Composition Rate</small>');
-      const info = document.getElementById('dupScanInfo');
-      if (info) info.textContent = 'Scanned 2,847 materials · 2 candidates found';
-      const dupList = document.getElementById('dupList');
-      if (dupList && !dupList.children.length) {
-        dupList.innerHTML = `
-          <tr>
-            <td class="d-code">182441</td>
-            <td class="d-name">Tetramethyl orthosilicate CFS-820<small>CAS 681-84-5</small></td>
-            <td><div class="d-sim mid"><div class="d-sim-bar"><div class="d-sim-fill" style="width:65%"></div></div><span class="d-sim-pct">65%</span></div></td>
-            <td>WTFD · CFS Korea</td>
-            <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
-          </tr>
-          <tr>
-            <td class="d-code">183207</td>
-            <td class="d-name">Tetramethyl orthosilicate CFS-1200<small>CAS 681-84-5</small></td>
-            <td><div class="d-sim low"><div class="d-sim-bar"><div class="d-sim-fill" style="width:58%"></div></div><span class="d-sim-pct">58%</span></div></td>
-            <td>SVLL · CFS Korea</td>
-            <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
-          </tr>`;
-      }
+      fillDupData(isFG);
     }
 
     document.querySelectorAll('#dupConfirm .chk-confirm').forEach(c => { c.checked = true; });
@@ -2806,7 +3199,7 @@ if (!isCust) {
   }
 
   function renderProcessMap() {
-    const flow = processFlows[pSub] || processFlows['new'];
+    const flow = currentFlow;
     const body = document.getElementById('pmBody');
     let html = `<h4 class="pm-process-title">${flow.title} Process</h4><div class="pm-flow-vertical">`;
     flow.nodes.forEach(node => {
@@ -2852,6 +3245,8 @@ if (!isCust) {
   const uploadState = { Tds: null, Msds: null, Comp: null };
   function initDropzones() {
     document.querySelectorAll('.dropzone').forEach(dz => {
+      if (dz.classList.contains('dropzone-textarea')) return;
+      if (dz.classList.contains('is-readonly')) return;
       const kind = dz.dataset.kind; if (!kind) return;
       const inp = dz.querySelector('input[type="file"]');
       dz.addEventListener('click', () => inp && inp.click());
@@ -2875,7 +3270,23 @@ if (!isCust) {
   };
   function checkParseReady() {
     const btn = document.getElementById('parseBtn'); if (!btn) return;
-    const allReady = uploadState.Tds && uploadState.Msds && uploadState.Comp;
+    let allReady;
+    if (isFG) {
+      const specEl = document.getElementById('fgSpecText');
+      const hasSpec = !!(specEl && specEl.value.trim().length > 0);
+      const hasComp = !!uploadState.Comp;
+      allReady = hasSpec && hasComp;
+      const hint = document.getElementById('dv1Hint');
+      if (hint && !btn.classList.contains('is-done')) {
+        hint.textContent = allReady
+          ? 'Ready — click Parse & Auto-fill to extract product details'
+          : (!hasSpec && !hasComp ? 'Complete the description and attach the composition sheet to continue'
+             : !hasSpec ? 'Add product specifications to continue'
+             : 'Attach composition sheet to continue');
+      }
+    } else {
+      allReady = uploadState.Tds && uploadState.Msds && uploadState.Comp;
+    }
     const wasDisabled = btn.disabled;
     btn.disabled = !allReady;
     /* 막 활성화된 시점에만 튀어오르기 애니메이션 (활성 상태 유지 동안 재시작 X) */
@@ -2884,6 +3295,10 @@ if (!isCust) {
       setTimeout(() => btn.classList.remove('btn-just-ready'), 600);
     }
   }
+  /* FG textarea 입력 변화 트리거 */
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'fgSpecText') checkParseReady();
+  });
   /* Sync the modal stepper visual + active panel.
      activeStep: which step gets is-active. doneSteps: array of step numbers marked is-done. */
   function setDvStep(activeStep, doneSteps) {
@@ -2946,26 +3361,7 @@ if (!isCust) {
       if (dupEmpty) dupEmpty.style.display = 'none';
       if (dupContent) {
         dupContent.style.display = 'block';
-        document.getElementById('dupVendor').innerHTML = 'Hubei Co-Formula Material Tech Co., Ltd.<small>from TDS</small>';
-        document.getElementById('dupName').innerHTML = 'Tetramethyl orthosilicate<small>from TDS</small>';
-        document.getElementById('dupSpec').innerHTML = 'CFS-845<small>from TDS</small>';
-        document.getElementById('dupCas').innerHTML = '541-05-9 <em class="cas-pct">98%</em><br>556-67-2 <em class="cas-pct">2%</em><small>from Composition Rate</small>';
-        document.getElementById('dupScanInfo').textContent = 'Scanned 2,847 materials · 2 candidates found';
-        document.getElementById('dupList').innerHTML += `
-          <tr>
-            <td class="d-code">182441</td>
-            <td class="d-name">Tetramethyl orthosilicate CFS-820<small>CAS 681-84-5</small></td>
-            <td><div class="d-sim mid"><div class="d-sim-bar"><div class="d-sim-fill" style="width:65%"></div></div><span class="d-sim-pct">65%</span></div></td>
-            <td>WTFD · CFS Korea</td>
-            <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
-          </tr>
-          <tr>
-            <td class="d-code">183207</td>
-            <td class="d-name">Tetramethyl orthosilicate CFS-1200<small>CAS 681-84-5</small></td>
-            <td><div class="d-sim low"><div class="d-sim-bar"><div class="d-sim-fill" style="width:58%"></div></div><span class="d-sim-pct">58%</span></div></td>
-            <td>SVLL · CFS Korea</td>
-            <td><a href="javascript:;" class="hBtn hBtn-sm hOrange waves-effect waves-light"><i class="material-icons">compare_arrows</i><span class="label">Compare</span></a></td>
-          </tr>`;
+        fillDupData(isFG, /*append=*/true);
       }
       /* Auto-advance to Duplicate Check panel after parsing */
       setTimeout(() => switchDvPanel(2), 500);
@@ -3040,7 +3436,211 @@ if (!isCust) {
       ],
     },
   };
-  function openCompareModal(code) {
+  /* FG 비교 데이터 — Parent FG Code 기준 (SKU 단위 Container/Spec 정보 제외).
+     신규 등록 시나리오 (가장 가까운 후보도 60% 미만), 실리콘/실란 chemistry 기반 mock.
+     NEW REQUEST = 3-MPTMS (mercapto) 계열, EXISTING 후보들은 다른 functional group 의
+     실란 또는 PDMS pre-mix — composition 약 절반만 겹쳐 자연스럽게 50%대 유사도 */
+  const REQUEST_FG = {
+    code: '— (new)',
+    description: 'SILQUEST GAMMA-MPS SILANE',
+    brand: 'SILQUEST', product: 'GAMMA-MPS SILANE',
+    functionalGroup: 'Mercapto Silane',
+    mainComponent: '3-MPTMS · 75%',
+    composition: [
+      { cas:'4420-74-0',    name:'3-Mercaptopropyltrimethoxysilane (3-MPTMS)', pct:75 },
+      { cas:'112945-52-5',  name:'Fumed silica',                                pct:8 },
+      { cas:'67-56-1',      name:'Methanol',                                    pct:5 },
+      { cas:'78-10-4',      name:'Tetraethyl orthosilicate (TEOS)',             pct:3 },
+      { cas:'471-34-1',     name:'Calcium carbonate (CaCO3)',                   pct:2 },
+      { cas:'556-67-2',     name:'Octamethylcyclotetrasiloxane (D4)',           pct:2 },
+      { cas:'1185-55-3',    name:'Methyltrimethoxysilane (MTMS)',               pct:2 },
+      { cas:'128-37-0',     name:'2,6-Di-tert-butyl-p-cresol (BHT)',            pct:1 },
+      { cas:'77-58-7',      name:'Dibutyltin dilaurate (DBTDL)',                pct:1 },
+      { cas:'63148-62-9',   name:'Polydimethylsiloxane (PDMS)',                 pct:1 },
+    ],
+  };
+  /* SILQUEST A-1100 (3-APTES amino-functional silane) */
+  const _A1100_COMP = [
+    { cas:'919-30-2',     name:'3-Aminopropyltriethoxysilane (3-APTES)',      pct:80 },
+    { cas:'112945-52-5',  name:'Fumed silica',                                pct:6 },
+    { cas:'64-17-5',      name:'Ethanol',                                     pct:4 },
+    { cas:'78-10-4',      name:'Tetraethyl orthosilicate (TEOS)',             pct:3 },
+    { cas:'471-34-1',     name:'Calcium carbonate (CaCO3)',                   pct:2 },
+    { cas:'107-46-0',     name:'Hexamethyldisiloxane',                        pct:2 },
+    { cas:'556-67-2',     name:'Octamethylcyclotetrasiloxane (D4)',           pct:1.5 },
+    { cas:'78-08-0',      name:'Vinyltriethoxysilane',                        pct:1 },
+    { cas:'128-37-0',     name:'2,6-Di-tert-butyl-p-cresol (BHT)',            pct:0.5 },
+  ];
+  /* SILQUEST A-1110 (Phenyl-amino silane variant) */
+  const _A1110_COMP = [
+    { cas:'3068-76-6',    name:'N-Phenyl-3-aminopropyltrimethoxysilane',      pct:78 },
+    { cas:'112945-52-5',  name:'Fumed silica',                                pct:7 },
+    { cas:'67-56-1',      name:'Methanol',                                    pct:4 },
+    { cas:'78-10-4',      name:'Tetraethyl orthosilicate (TEOS)',             pct:3 },
+    { cas:'471-34-1',     name:'Calcium carbonate (CaCO3)',                   pct:2 },
+    { cas:'107-46-0',     name:'Hexamethyldisiloxane',                        pct:2 },
+    { cas:'556-67-2',     name:'Octamethylcyclotetrasiloxane (D4)',           pct:2 },
+    { cas:'1185-55-3',    name:'Methyltrimethoxysilane (MTMS)',               pct:1.5 },
+    { cas:'128-37-0',     name:'2,6-Di-tert-butyl-p-cresol (BHT)',            pct:0.5 },
+  ];
+  /* DOWSIL Z-6020 (diamine-functional silane) */
+  const _DOWSIL_COMP = [
+    { cas:'1760-24-3',    name:'N-(2-Aminoethyl)-3-aminopropyltrimethoxysilane', pct:78 },
+    { cas:'112945-52-5',  name:'Fumed silica',                                pct:7 },
+    { cas:'67-56-1',      name:'Methanol',                                    pct:5 },
+    { cas:'78-10-4',      name:'Tetraethyl orthosilicate (TEOS)',             pct:3 },
+    { cas:'1185-55-3',    name:'Methyltrimethoxysilane (MTMS)',               pct:2 },
+    { cas:'556-67-2',     name:'Octamethylcyclotetrasiloxane (D4)',           pct:2 },
+    { cas:'471-34-1',     name:'Calcium carbonate (CaCO3)',                   pct:1.5 },
+    { cas:'77-58-7',      name:'Dibutyltin dilaurate (DBTDL)',                pct:1 },
+    { cas:'128-37-0',     name:'2,6-Di-tert-butyl-p-cresol (BHT)',            pct:0.5 },
+  ];
+  /* KCC SILANE Pre-mix (PDMS-based pre-mix, 다른 카테고리 — RTV silicone 베이스) */
+  const _PREMIX_COMP = [
+    { cas:'63148-62-9',   name:'Polydimethylsiloxane (PDMS)',                 pct:60 },
+    { cas:'112945-52-5',  name:'Fumed silica',                                pct:15 },
+    { cas:'471-34-1',     name:'Calcium carbonate (CaCO3)',                   pct:10 },
+    { cas:'556-67-2',     name:'Octamethylcyclotetrasiloxane (D4)',           pct:5 },
+    { cas:'78-10-4',      name:'Tetraethyl orthosilicate (TEOS)',             pct:3 },
+    { cas:'1185-55-3',    name:'Methyltrimethoxysilane (MTMS)',               pct:2 },
+    { cas:'77-58-7',      name:'Dibutyltin dilaurate (DBTDL)',                pct:2 },
+    { cas:'67-56-1',      name:'Methanol',                                    pct:1 },
+    { cas:'128-37-0',     name:'2,6-Di-tert-butyl-p-cresol (BHT)',            pct:1 },
+    { cas:'56-81-5',      name:'Glycerol',                                    pct:1 },
+  ];
+  const COMPARE_DATA_FG = {
+    '182501': { code:'182501', description:'SILQUEST A-1100 SILANE',  brand:'SILQUEST', product:'A-1100 SILANE',  functionalGroup:'Amino Silane',         mainComponent:'3-APTES · 80%', similarity:58, composition:_A1100_COMP },
+    '182610': { code:'182610', description:'DOWSIL Z-6020 SILANE',    brand:'DOWSIL',   product:'Z-6020 SILANE',  functionalGroup:'Diamine Silane',       mainComponent:'AEAPTMS · 78%', similarity:54, composition:_DOWSIL_COMP },
+    '182700': { code:'182700', description:'SILQUEST A-1110 SILANE',  brand:'SILQUEST', product:'A-1110 SILANE',  functionalGroup:'Phenyl-Amino Silane',  mainComponent:'PAPTMS · 78%',  similarity:48, composition:_A1110_COMP },
+    '182611': { code:'182611', description:'KCC SILANE Pre-mix',      brand:'KCC',      product:'SILANE Pre-mix', functionalGroup:'PDMS-based',           mainComponent:'PDMS · 60%',    similarity:42, composition:_PREMIX_COMP },
+  };
+  function openCompareModalFG(code) {
+    const target = COMPARE_DATA_FG[code];
+    if (!target) return;
+    const body = document.getElementById('cmpBody');
+
+    /* Composition 비교 (Material 패턴 그대로 — CAS 기준 합집합) */
+    const reqMap = new Map(REQUEST_FG.composition.map(c => [c.cas, c]));
+    const tgtMap = new Map(target.composition.map(c => [c.cas, c]));
+    const allCas = [...new Set([...reqMap.keys(), ...tgtMap.keys()])];
+    const stats = { eq: 0, mn: 0, df: 0, missing: 0 };
+    const compRows = allCas.map(cas => {
+      const a = reqMap.get(cas);
+      const b = tgtMap.get(cas);
+      const aPct = a?.pct ?? 0;
+      const bPct = b?.pct ?? 0;
+      const name = a?.name || b?.name || '';
+      const diff = Math.abs(aPct - bPct);
+      let diffCls = 'eq';
+      if (!a || !b) diffCls = 'missing';
+      else if (diff > 5) diffCls = 'df';
+      else if (diff > 0) diffCls = 'mn';
+      stats[diffCls]++;
+      const diffIcon = !a || !b ? 'remove_circle_outline'
+                     : diff === 0 ? 'check_circle'
+                     : diff > 5 ? 'priority_high'
+                     : 'info';
+      const diffLabel = !a ? 'only existing'
+                       : !b ? 'only request'
+                       : diff === 0 ? 'match'
+                       : `Δ ${diff.toFixed(1)}%`;
+      return `
+        <div class="cmp2-row ${diffCls}">
+          <div class="cmp2-cas">
+            <span class="cmp2-cas-num">${cas}</span>
+            <span class="cmp2-cas-name">${name}</span>
+          </div>
+          <div class="cmp2-side cmp2-left">
+            <span class="cmp2-bar"><span class="cmp2-fill" style="width:${aPct}%"></span></span>
+            <b class="cmp2-pct">${a ? aPct + '%' : '—'}</b>
+          </div>
+          <div class="cmp2-delta"><span><i class="material-icons">${diffIcon}</i>${diffLabel}</span></div>
+          <div class="cmp2-side cmp2-right">
+            <b class="cmp2-pct">${b ? bPct + '%' : '—'}</b>
+            <span class="cmp2-bar"><span class="cmp2-fill" style="width:${bPct}%"></span></span>
+          </div>
+        </div>`;
+    }).join('');
+
+    const sim = target.similarity;
+    const verdictTone = sim >= 80 ? 'high' : sim >= 50 ? 'mid' : 'low';
+    const verdictIcon = sim >= 80 ? 'warning_amber' : sim >= 50 ? 'info' : 'check_circle';
+    const verdictMsg = sim >= 80 ? 'Highly similar — review carefully before creating new'
+                     : sim >= 50 ? 'Partial overlap — composition shares some components'
+                     : 'Distinct product — composition differs significantly';
+    const r = 38, c = 2 * Math.PI * r;
+    const dash = (sim / 100) * c;
+
+    /* 헤드 카드 안 토큰 strip — Parent FG Code 기준 (Container/Spec 같은 SKU-level 정보 제외).
+       NEW 는 회색(기준), EXISTING 만 비교 컬러 */
+    const newTokens = `
+      <div class="cmp2-head-tokens">
+        <span class="cmp2-tok-chip">${REQUEST_FG.brand}</span>
+        <span class="cmp2-tok-chip">${REQUEST_FG.product}</span>
+        <span class="cmp2-tok-chip">${REQUEST_FG.functionalGroup}</span>
+        <span class="cmp2-tok-chip">${REQUEST_FG.mainComponent}</span>
+      </div>`;
+    const tcls = (a, b) => a === b ? 'eq' : 'df';
+    const ticon = (a, b) => a === b ? 'check' : 'close';
+    const existTokens = `
+      <div class="cmp2-head-tokens">
+        <span class="cmp2-tok-chip ${tcls(REQUEST_FG.brand, target.brand)}"><i class="material-icons">${ticon(REQUEST_FG.brand, target.brand)}</i>${target.brand}</span>
+        <span class="cmp2-tok-chip ${tcls(REQUEST_FG.product, target.product)}"><i class="material-icons">${ticon(REQUEST_FG.product, target.product)}</i>${target.product}</span>
+        <span class="cmp2-tok-chip ${tcls(REQUEST_FG.functionalGroup, target.functionalGroup)}"><i class="material-icons">${ticon(REQUEST_FG.functionalGroup, target.functionalGroup)}</i>${target.functionalGroup}</span>
+        <span class="cmp2-tok-chip ${tcls(REQUEST_FG.mainComponent, target.mainComponent)}"><i class="material-icons">${ticon(REQUEST_FG.mainComponent, target.mainComponent)}</i>${target.mainComponent}</span>
+      </div>`;
+
+    body.innerHTML = `
+      <div class="cmp2-summary">
+        <div class="cmp2-sum-donut" data-tone="${verdictTone}">
+          <svg viewBox="0 0 100 100">
+            <circle class="cmp2-donut-track" cx="50" cy="50" r="${r}"></circle>
+            <circle class="cmp2-donut-fill" cx="50" cy="50" r="${r}" stroke-dasharray="${dash} ${c}" transform="rotate(-90 50 50)"></circle>
+          </svg>
+          <div class="cmp2-donut-label">
+            <span class="cmp2-sum-pct">${sim}<small>%</small></span>
+            <span class="cmp2-sum-cap">similarity</span>
+          </div>
+        </div>
+        <div class="cmp2-sum-detail">
+          <div class="cmp2-sum-verdict ${verdictTone}">
+            <i class="material-icons">${verdictIcon}</i>
+            <span>${verdictMsg}</span>
+          </div>
+          <div class="cmp2-sum-stats">
+            <span class="cs-stat eq"><b>${stats.eq}</b><small>match</small></span>
+            <span class="cs-stat mn"><b>${stats.mn}</b><small>minor</small></span>
+            <span class="cs-stat df"><b>${stats.df}</b><small>different</small></span>
+            <span class="cs-stat missing"><b>${stats.missing}</b><small>only one side</small></span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp2-headrow">
+        <div class="cmp2-head-cas">CAS / Component</div>
+        <div class="cmp2-head-side">
+          <div class="cmp2-head-card req">
+            <span class="cmp2-head-tag req"><i class="material-icons">fiber_new</i>NEW REQUEST</span>
+            <span class="cmp2-head-name">${REQUEST_FG.description}</span>
+            ${newTokens}
+          </div>
+        </div>
+        <div class="cmp2-head-delta">vs</div>
+        <div class="cmp2-head-side">
+          <div class="cmp2-head-card exist">
+            <span class="cmp2-head-tag exist"><i class="material-icons">inventory_2</i>EXISTING #${target.code}</span>
+            <span class="cmp2-head-name">${target.description}</span>
+            ${existTokens}
+          </div>
+        </div>
+      </div>
+      <div class="cmp2-body">${compRows}</div>
+      <div class="cmp2-foot">
+        <button class="hBtn hGrey waves-effect modal-close"><i class="material-icons">close</i><span class="label">Close</span></button>
+      </div>`;
+    M.Modal.getInstance(document.getElementById('cmpModal')).open();
+  }
+  function openCompareModal(code, isFGCmp) {
+    if (isFGCmp) return openCompareModalFG(code);
     const target = COMPARE_DATA[code];
     if (!target) return;
     const body = document.getElementById('cmpBody');
@@ -3087,10 +3687,10 @@ if (!isCust) {
         </div>`;
     }).join('');
     const sim = target.similarity;
-    const verdictTone = sim >= 80 ? 'high' : sim >= 60 ? 'mid' : 'low';
-    const verdictIcon = sim >= 80 ? 'warning_amber' : sim >= 60 ? 'info' : 'check_circle';
+    const verdictTone = sim >= 80 ? 'high' : sim >= 50 ? 'mid' : 'low';
+    const verdictIcon = sim >= 80 ? 'warning_amber' : sim >= 50 ? 'info' : 'check_circle';
     const verdictMsg = sim >= 80 ? 'Highly similar — review carefully before creating new'
-                     : sim >= 60 ? 'Partial match — composition differs but ingredients overlap'
+                     : sim >= 50 ? 'Partial match — composition differs but ingredients overlap'
                      : 'Different material — composition does not match';
     /* 도넛 차트 — SVG circle stroke-dasharray */
     const r = 38, c = 2 * Math.PI * r;
@@ -3142,23 +3742,35 @@ if (!isCust) {
       </div>`;
     M.Modal.getInstance(document.getElementById('cmpModal')).open();
   }
-  /* dup 테이블 행의 Compare 버튼 클릭 위임 */
+  /* dup 테이블 행의 Compare 버튼 클릭 위임 — Material(#dupList), FG(#dupListFG) 둘 다 처리 */
   document.addEventListener('click', (e) => {
-    const cmpBtn = e.target.closest('#dupList .hBtn');
+    const cmpBtn = e.target.closest('#dupList .hBtn, #dupListFG .hBtn');
     if (cmpBtn) {
       const row = cmpBtn.closest('tr');
       const code = row?.querySelector('.d-code')?.textContent.trim();
-      if (code) openCompareModal(code);
+      const tableId = cmpBtn.closest('tbody')?.id;
+      if (code) openCompareModal(code, tableId === 'dupListFG');
     }
+  });
+
+  /* EHS pictogram / PPE 토글 — 클릭 시 활성/비활성 토글 (그레이 ↔ 레드) */
+  document.addEventListener('click', (e) => {
+    const picto = e.target.closest('.ehs-pictos .ehs-picto');
+    if (picto) picto.classList.toggle('ehs-picto-on');
+    const ppe = e.target.closest('.ehs-ppe-row .ehs-ppe');
+    if (ppe) ppe.classList.toggle('ehs-ppe-on');
   });
 
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initDropzones, 100);
     /* Back button inside the verification inline wizard — duplicate check → upload */
     const back1 = document.getElementById('dvBackTo1'); if (back1) back1.addEventListener('click', () => switchDvPanel(1));
-    /* Compare modal init */
+    /* Compare modal init — startingTop/endingTop 옵션으로 위로 올림.
+       composition 12+ 행이 들어가는 큰 모달이라 top 4% 로 내려서 height 확보 */
     const cmpModalEl = document.getElementById('cmpModal');
     if (cmpModalEl) M.Modal.init(cmpModalEl, {
+      startingTop: '4%',
+      endingTop: '4%',
       onOpenStart() { document.querySelector('.app-header')?.classList.add('content-blur'); document.querySelector('.detail-layout')?.classList.add('content-blur'); },
       onCloseStart() { document.querySelector('.app-header')?.classList.remove('content-blur'); document.querySelector('.detail-layout')?.classList.remove('content-blur'); },
     });

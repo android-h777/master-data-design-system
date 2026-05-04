@@ -478,11 +478,12 @@
     return states;
   }
 
-  function renderListProcess(sub, currentNode, status, kind) {
+  function renderListProcess(sub, currentNode, status, kind, step) {
     const isCust = kind === 'customer';
+    const isFG = step === 'Finished Goods' || step === 'Semi-Finished';
     const flowMap = isCust ? customerFlows : processFlows;
     const pMap    = isCust ? customerPersonMap : personMap;
-    const flow = flowMap[sub] || flowMap['new'] || flowMap['newCust'];
+    const flow = (!isCust && isFG) ? finishedGoodsFlow : (flowMap[sub] || flowMap['new'] || flowMap['newCust']);
     const container = document.getElementById('mrProcessFlow');
     const states = calcNodeStates(flow, currentNode, status);
 
@@ -575,7 +576,7 @@
 
     card.className = 'mr-detail-card mr-' + mr.status;
 
-    renderListProcess(mr.sub, mr.currentNode, mr.status, mr.kind);
+    renderListProcess(mr.sub, mr.currentNode, mr.status, mr.kind, mr.step);
   }
 
   /* 리스트 클릭 이벤트 */
@@ -798,6 +799,11 @@
         document.querySelector('.nr-step3-material').style.display = '';
         document.querySelector('.nr-step3-change').style.display = 'none';
         document.querySelector('.nr-step3-block').style.display = 'none';
+        /* placeholder + 검색 데이터 source 가 type 별로 다름 (FG/SemiFG 는 product 검색) */
+        const isFGType = selectedType === 'Finished Goods' || selectedType === 'Semi-Finished';
+        document.getElementById('baseMtlSearch').placeholder = isFGType
+          ? 'Search product by code or name...'
+          : 'Search material by code or name...';
         renderBaseMtlList('');
         goToStep(2, 3);
       } else {
@@ -869,18 +875,28 @@
 
   /* Step 3: Base Material 검색 */
   function renderBaseMtlList(keyword) {
+    /* type 별 검색 source 분기 — FG/SemiFG 는 products(KCC FG mock), 그 외는 materials(원자재).
+       FG 는 Parent 기준이라 우측 셀에 SKU 개수 뱃지, Material 은 카테고리(cat) 그대로 */
+    const isFG = selectedType === 'Finished Goods' || selectedType === 'Semi-Finished';
+    const dataSource = isFG ? products : materials;
     const kw = keyword.toLowerCase();
-    const filtered = materials.filter(m =>
+    const filtered = dataSource.filter(m =>
       !kw || m.code.toLowerCase().includes(kw) || m.name.toLowerCase().includes(kw)
     );
     document.getElementById('baseMtlList').innerHTML = filtered.length
-      ? filtered.map(m => `
+      ? filtered.map(m => {
+          const metaHtml = isFG
+            ? (m.sku
+                ? `<span class="mtl-sku-badge"><i class="material-icons">inventory_2</i>${m.sku} SKU${m.sku > 1 ? 's' : ''}</span>`
+                : `<span class="mtl-cat">—</span>`)
+            : `<span class="mtl-cat">${m.cat}</span>`;
+          return `
         <li data-code="${m.code}" class="${selectedMtl === m.code ? 'selected' : ''}">
           <span class="mtl-code">${m.code}</span>
           <span class="mtl-name">${m.name}</span>
-          <span class="mtl-cat">${m.cat}</span>
-        </li>
-      `).join('')
+          ${metaHtml}
+        </li>`;
+        }).join('')
       : '<li class="mtl-empty"><i class="material-icons">search_off</i>No results found</li>';
   }
 
@@ -954,9 +970,10 @@
 
   function renderProcessMap(key) {
     const isCv = selectedKind === 'customer' || selectedKind === 'vendor';
+    const isFG = selectedType === 'Finished Goods' || selectedType === 'Semi-Finished';
     const flowMap = isCv ? customerFlows : processFlows;
     const resolvedKey = isCv ? (cvFlowKeyMap[key] || key) : key;
-    const flow = flowMap[resolvedKey];
+    const flow = (!isCv && isFG) ? finishedGoodsFlow : flowMap[resolvedKey];
     if (!flow) return;
     document.getElementById('pmTitle').textContent = flow.title + (isCv ? ' — Approval Flow' : ' Process');
     document.getElementById('pmFlow').innerHTML = flow.nodes.map(n => {
