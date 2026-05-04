@@ -200,19 +200,19 @@
       <div class="subtype-list nr-pad nr-sub-material">
         <div class="subtype-item waves-effect" data-sub="new">
           <div class="subtype-head"><span class="subtype-num">1</span><span class="subtype-name">New Code Creation</span></div>
-          <p class="subtype-desc">Create a new raw material code for new product development or material substitution (Technical), and for cost reduction purposes (Procurement).</p>
+          <p class="subtype-desc">Create a new <span class="material-noun">raw material</span> code for new product development or material substitution (Technical), and for cost reduction purposes (Procurement).</p>
         </div>
         <div class="subtype-item waves-effect" data-sub="plant">
           <div class="subtype-head"><span class="subtype-num">2</span><span class="subtype-name">Add Plant</span></div>
-          <p class="subtype-desc">Extend an existing raw material to additional production plants so that it can be used across different business units.</p>
+          <p class="subtype-desc">Extend an existing <span class="material-noun">raw material</span> to additional production plants so that it can be used across different business units.</p>
         </div>
         <div class="subtype-item waves-effect" data-sub="packing">
           <div class="subtype-head"><span class="subtype-num">3</span><span class="subtype-name">Add Packing Size</span></div>
-          <p class="subtype-desc">Create a new packing size option for an existing raw material to support procurement in different packaging units.</p>
+          <p class="subtype-desc">Create a new packing size option for an existing <span class="material-noun">raw material</span> to support procurement in different packaging units.</p>
         </div>
         <div class="subtype-item waves-effect" data-sub="reactivation">
           <div class="subtype-head"><span class="subtype-num">4</span><span class="subtype-name">Reactivation</span></div>
-          <p class="subtype-desc">Re-activate inactive (unused) raw material codes for reuse.</p>
+          <p class="subtype-desc">Re-activate inactive (unused) <span class="material-noun">raw material</span> codes for reuse.</p>
         </div>
       </div>
       <!-- Customer/Vendor subtypes -->
@@ -774,6 +774,11 @@
         const nounCap = selectedKind === 'customer' ? 'Customer' : 'Vendor';
         document.querySelectorAll('.cv-noun').forEach(el => el.textContent = noun);
         document.querySelectorAll('.cv-noun-cap').forEach(el => el.textContent = nounCap);
+      } else {
+        /* Material 분기 — type 에 따라 sub-card description 의 noun 교체 */
+        const isFGType = selectedType === 'Finished Goods' || selectedType === 'Semi-Finished';
+        const matNoun = isFGType ? 'product' : 'raw material';
+        document.querySelectorAll('.material-noun').forEach(el => el.textContent = matNoun);
       }
 
       goToStep(1, 2);

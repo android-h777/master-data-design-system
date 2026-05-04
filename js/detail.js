@@ -1226,7 +1226,7 @@ if (!isCust) {
           <tr>
             <td class="pm-spec-name">
               <span class="pm-mat-pill">Mat#1</span>
-              <span class="pm-mat-text">${isFG ? 'SILQUEST GAMMA-MPS SILANE / DRUM / 179.99 KG' : 'TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 179.99 KG'}</span>
+              <span class="pm-mat-text">${productModel.cnt1Name}</span>
             </td>
             <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option selected>MTO</option><option>MTS</option></select></div></td>
             <td><div class="aniInput"><input type="text" class="browser-default" value="180"><span class="focus-border"></span></div></td>
