@@ -368,44 +368,30 @@ if (!isCust) {
   }
   const isFG = (pType === 'Finished Goods' || pType === 'Semi-Finished');
 
-  /* type 별 단일 source of truth — Material Name 인풋, Container 행, Composition Rate,
-     Compliance form, PM·Release stage 등 모든 값/라벨 분기에 사용.
-     Compare 모달의 REQUEST_FG.composition / REQUEST_MATERIAL.composition 과 같은 값 공유 */
-  const FG_COMPOSITION = [
-    { cas:'4420-74-0',    chem:'3-MERCAPTOPROPYLTRIMETHOXYSILANE',           pct:75   },
-    { cas:'112945-52-5',  chem:'FUMED SILICA',                                pct:8    },
-    { cas:'67-56-1',      chem:'METHANOL',                                    pct:5    },
-    { cas:'78-10-4',      chem:'TETRAETHYL ORTHOSILICATE',                    pct:3    },
-    { cas:'471-34-1',     chem:'CALCIUM CARBONATE',                           pct:2    },
-    { cas:'556-67-2',     chem:'OCTAMETHYLCYCLOTETRASILOXANE',                pct:2    },
-    { cas:'1185-55-3',    chem:'METHYLTRIMETHOXYSILANE',                      pct:2    },
-    { cas:'128-37-0',     chem:'2,6-DI-TERT-BUTYL-P-CRESOL',                  pct:1    },
-    { cas:'77-58-7',      chem:'DIBUTYLTIN DILAURATE',                        pct:1    },
-    { cas:'63148-62-9',   chem:'POLYDIMETHYLSILOXANE',                        pct:1    },
-  ];
-  const MAT_COMPOSITION = [
-    { cas:'541-05-9', chem:'HEXAMETHYLCYCLOTRISILOXANE',  pct:98 },
-    { cas:'556-67-2', chem:'OCTAMETHYLCYCLOTETRASILOXANE', pct:2  },
-  ];
-  const productModel = isFG ? {
-    nameLabel:        'Product Name',
-    parentCodeLabel:  'Parent FG Code',
-    parentNameLabel:  'Parent FG Name',
-    fullName:         'SILQUEST GAMMA-MPS SILANE',
-    spec:             'GAMMA-MPS',
-    substance:        'SILQUEST',
-    descLine:         'SILQUEST GAMMA-MPS SILANE',
-    cnt1Name:         'SILQUEST GAMMA-MPS SILANE / DRUM / 180 KG',
-    cnt2Name:         'SILQUEST GAMMA-MPS SILANE / BULK',
-    reasonText:       'New finished good required for adhesive primer line. Customer Acme Poly qualified; composition sheet received with full BOM.',
-    composition:      FG_COMPOSITION,
-    /* Product Management 용 — 완제품 기준 (판매·application 중심) */
-    pm: {
+  /* type 별 single source of truth — productModel 은 type 별 default(label / pm / plants 톤)
+     + bank 항목(fullName / composition / release 등) 합집합. mr.id 기반 hash 로 bank 항목 pick →
+     같은 type 의 다른 MR 들이 풀 안에서 분배되어 mock 다양성 확보 */
+  const _bank = isFG ? fgProductBank : matProductBank;
+  const _idNum = parseInt(String(pId || '').replace(/\D/g, ''), 10) || 0;
+  const _bankItem = _bank[_idNum % _bank.length] || _bank[0];
+  const productModel = {
+    nameLabel:       isFG ? 'Product Name' : 'Material Name',
+    parentCodeLabel: isFG ? 'Parent FG Code' : 'Parent RM Code',
+    parentNameLabel: isFG ? 'Parent FG Name' : 'Parent RM Name',
+    fullName:        _bankItem.fullName,
+    spec:            _bankItem.spec,
+    substance:       _bankItem.substance,
+    descLine:        _bankItem.descLine || _bankItem.fullName,
+    cnt1Name:        _bankItem.fullName + ' / DRUM / 180 KG',
+    cnt2Name:        _bankItem.fullName + ' / BULK',
+    reasonText:      _bankItem.reasonText,
+    composition:     _bankItem.composition,
+    pm: isFG ? {
       materialTypeOptionsHtml: '<option>Raw Material</option><option>Semi-Finished</option><option selected>Finished Goods</option>',
       usageLabel: 'Application',
       usageOptionsHtml: '<option selected>Adhesive Primer</option><option>Sealant</option><option>Coating</option><option>Industrial</option>',
       priceLabel: 'Selling price',
-      productTextsValue: 'Mercapto-functional silane coupling agent for adhesion promotion. Formulated for ambient-cure adhesive systems. Store in cool, dry, well-ventilated area.',
+      productTextsValue: _bankItem.productTextsValue,
       confirmItems: [
         'Selling price with currency',
         'Update product texts',
@@ -413,61 +399,12 @@ if (!isCust) {
         'Pricing margin reviewed',
         "Validate requestor's tab information",
       ],
-    },
-    /* Release 용 — 완제품 기준 (자체 생산, 한국 plants).
-       KCC SAP Material Code 양식: 5–6자리 숫자 (캡쳐의 50825 / 60842 / 66479 패턴) */
-    release: {
-      parentCode:        '60842',
-      manufactureLabel:  'Manufacturing Site',
-      manufactureValue:  'KCC Otha Plant',
-      hsCode:            '3824.99-9930',
-      unNumber:          'Non-hazardous',
-      variants: [
-        {
-          packLabel:'Drum', packPillCls:'',
-          code:'60843',
-          packUnit:'200L Steel Drum',
-          netGross:'16,000 / 17,800 kg',
-          moq:'80 drums',
-          stdCost:'$8.50 / kg',
-          plants:[
-            { code:'OTHA',   loc:'FG-A1 · Finished Liquid A' },
-            { code:'GUNSAN', loc:'FG-B1 · Finished Liquid'   },
-          ],
-        },
-        {
-          packLabel:'Bulk', packPillCls:'sc-pack-bulk',
-          code:'60844',
-          packUnit:'ISO Tank / IBC',
-          netGross:'20,000 / 24,400 kg',
-          moq:'1 tank / 20 IBC',
-          stdCost:'$8.20 / kg',
-          plants:[
-            { code:'OTHA',   loc:'FG-A3 · Bulk Tank A' },
-            { code:'GUNSAN', loc:'FG-B2 · Bulk Tank'   },
-          ],
-        },
-      ],
-    },
-  } : {
-    nameLabel:        'Material Name',
-    parentCodeLabel:  'Parent RM Code',
-    parentNameLabel:  'Parent RM Name',
-    fullName:         'TETRAMETHYL ORTHOSILICATE CFS-845',
-    spec:             'CFS-845',
-    substance:        'Tetramethyl orthosilicate',
-    descLine:         'Tetramethyl orthosilicate CFS-845',
-    cnt1Name:         'TETRAMETHYL ORTHOSILICATE CFS-845 / DRUM / 180 KG',
-    cnt2Name:         'TETRAMETHYL ORTHOSILICATE CFS-845 / BULK',
-    reasonText:       'New raw material required for GS3723(A) formulation. Supplier qualified; TDS/MSDS/composition received.',
-    composition:      MAT_COMPOSITION,
-    /* Product Management 용 — 원자재 기준 (구매·usage 중심) */
-    pm: {
+    } : {
       materialTypeOptionsHtml: '<option selected>Raw Material</option><option>Semi-Finished</option><option>Finished Goods</option>',
       usageLabel: 'Material Usage',
       usageOptionsHtml: '<option selected>Raw ingredient</option><option>Catalyst</option><option>Solvent</option>',
       priceLabel: 'Purchase price',
-      productTextsValue: 'High-purity orthosilicate ester. Use within 6 months of opening. Store in cool, dry, well-ventilated area.',
+      productTextsValue: _bankItem.productTextsValue,
       confirmItems: [
         'ASP with currency',
         'Update product texts',
@@ -476,44 +413,32 @@ if (!isCust) {
         "Validate requestor's tab information",
       ],
     },
-    /* Release 용 — 원자재 기준 (외부 vendor 구매, US plants).
-       KCC SAP Material Code 양식: 5–6자리 숫자 */
     release: {
-      parentCode:        '45118',
-      manufactureLabel:  'Vendor',
-      manufactureValue:  'Hubei Co-Formula Material Tech Co., Ltd.',
-      hsCode:            '2920.90-9000',
-      unNumber:          'UN 2920 · Class 3 / II',
-      variants: [
-        {
-          packLabel:'Drum', packPillCls:'',
-          code:'45119',
-          packUnit:'200L Steel Drum',
-          netGross:'16,000 / 17,800 kg',
-          moq:'80 drums',
-          stdCost:'$3.78 / kg',
-          plants:[
-            { code:'WTFD', loc:'RM-A1 · Raw Liquid A' },
-            { code:'SVLL', loc:'RM-B1 · Raw Liquid'   },
-          ],
-        },
-        {
-          packLabel:'Bulk', packPillCls:'sc-pack-bulk',
-          code:'45120',
-          packUnit:'ISO Tank / IBC',
-          netGross:'20,000 / 24,400 kg',
-          moq:'1 tank / 20 IBC',
-          stdCost:'$3.62 / kg',
-          plants:[
-            { code:'WTFD', loc:'RM-A3 · Bulk Tank A' },
-            { code:'SVLL', loc:'RM-B2 · Bulk Tank'   },
-          ],
-        },
-      ],
+      parentCode:       _bankItem.release.parentCode,
+      manufactureLabel: isFG ? 'Manufacturing Site' : 'Vendor',
+      manufactureValue: _bankItem.release.manufactureValue || (isFG ? 'KCC Otha Plant' : 'External Supplier'),
+      hsCode:           _bankItem.release.hsCode,
+      unNumber:         _bankItem.release.unNumber,
+      variants:         _bankItem.release.variants.map(function(v){ return Object.assign({}, v, {
+        packPillCls: v.packLabel === 'Bulk' ? 'sc-pack-bulk' : '',
+        plants: isFG
+          ? [{ code:'OTHA',   loc:'FG-A1 \u00b7 Finished Goods A' }, { code:'GUNSAN', loc:'FG-B1 \u00b7 Finished Goods' }]
+          : [{ code:'WTFD',   loc:'RM-A1 \u00b7 Raw Material A'   }, { code:'SVLL',   loc:'RM-B1 \u00b7 Raw Material'     }],
+      }); }),
     },
   };
   /* CAS 두 개 강조 표시 (Release stage 의 rel-master-val 에서 사용) */
   const productModelCasList = productModel.composition.slice(0, 2).map(c => c.cas).join(' · ');
+
+  /* SKU helper — variants 를 Basic Info SKU 표 / PM stage Mat#X 행 으로 동적 렌더할 때 사용.
+     matName 자동 생성: <fullName> / <containerCode>[ / <netContent> <uom>]. BULK 는 net 생략 */
+  productModel.skuList = productModel.release.variants.map(v => {
+    const hasNet = v.netContent !== '' && v.netContent != null && v.containerCode !== 'BULK';
+    const matName = productModel.fullName
+      + ' / ' + (v.containerCode || v.packLabel.toUpperCase())
+      + (hasNet ? ' / ' + v.netContent + ' ' + (v.uom || '') : '');
+    return Object.assign({}, v, { matName });
+  });
 
   const routingData = {};
   Object.keys(processFlows).forEach(key => {
@@ -926,62 +851,35 @@ if (!isCust) {
                 </tr>
               </thead>
               <tbody>
+                ${productModel.skuList.map((sku, i) => {
+                  const containerOpts = ['DRUM','BULK','IBC','CAN','CARTRIDGE','PAIL','BAG','BOTTLE','TANK','FIBC'];
+                  const uomOpts = ['KG','L','GAL','LB','ml','EA','TON'];
+                  const containerHtml = containerOpts.map(c => `<option value="${c}"${c === sku.containerCode ? ' selected' : ''}>${c}</option>`).join('');
+                  const uomHtml = uomOpts.map(u => `<option value="${u}"${u === sku.uom ? ' selected' : ''}>${u}</option>`).join('');
+                  return `
                 <tr>
-                  <td class="hoo-no">1</td>
+                  <td class="hoo-no">${i + 1}</td>
                   <td>
                     <div class="bi-select-wrap">
                       <select class="bi-select browser-default cnt-container">
                         <option value="">Select…</option>
-                        <option value="BULK">BULK</option>
-                        <option value="DRUM" selected>DRUM</option>
-                        <option value="IBC">IBC</option>
-                        <option value="CAN">CAN</option>
+                        ${containerHtml}
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="number" min="0" step="0.01" class="browser-default hoo-num cnt-net" value="180"><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="number" min="0" step="0.01" class="browser-default hoo-num cnt-net" value="${sku.netContent}"><span class="focus-border"></span></div></td>
                   <td>
                     <div class="bi-select-wrap">
                       <select class="bi-select browser-default cnt-uom">
-                        <option value="KG" selected>KG</option>
-                        <option value="L">L</option>
-                        <option value="GAL">GAL</option>
-                        <option value="LB">LB</option>
+                        ${uomHtml}
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? productModel.release.variants[0].code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt1Name}" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? sku.code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${sku.matName}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
-                </tr>
-                <tr>
-                  <td class="hoo-no">2</td>
-                  <td>
-                    <div class="bi-select-wrap">
-                      <select class="bi-select browser-default cnt-container">
-                        <option value="">Select…</option>
-                        <option value="BULK" selected>BULK</option>
-                        <option value="DRUM">DRUM</option>
-                        <option value="IBC">IBC</option>
-                        <option value="CAN">CAN</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td><div class="aniInput"><input type="number" min="0" step="0.01" class="browser-default hoo-num cnt-net" value=""><span class="focus-border"></span></div></td>
-                  <td>
-                    <div class="bi-select-wrap">
-                      <select class="bi-select browser-default cnt-uom">
-                        <option value="KG" selected>KG</option>
-                        <option value="L">L</option>
-                        <option value="GAL">GAL</option>
-                        <option value="LB">LB</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? productModel.release.variants[1].code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${productModel.cnt2Name}" readonly><span class="focus-border"></span></div></td>
-                  <td class="hoo-x"><i class="material-icons">close</i></td>
-                </tr>
+                </tr>`;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -1223,36 +1121,33 @@ if (!isCust) {
           </tr>
         </thead>
         <tbody>
+          ${productModel.skuList.map((sku, i) => {
+            /* MOQ / leadTime / safetyStock / 가격 = bank 에 없으면 합리적 default 생성 */
+            const moqDefault = sku.netContent && typeof sku.netContent === 'number' ? sku.netContent : (i === 0 ? 180 : 5000);
+            const leadDefault = i === 0 ? 14 : (i === 1 ? 21 : 28);
+            const safetyDefault = i === 0 ? 540 : (i === 1 ? 15000 : 9000);
+            /* 가격: stdCost 의 숫자만 추출 */
+            const costMatch = (sku.stdCost || '').match(/[\d,.]+/);
+            const priceNum = costMatch ? costMatch[0] : '—';
+            const priceCurr = isFG ? 'KRW' : 'RMB';
+            const mrpDefault = i === 0 ? 'MTO' : 'MTS';
+            return `
           <tr>
             <td class="pm-spec-name">
-              <span class="pm-mat-pill">Mat#1</span>
-              <span class="pm-mat-text">${productModel.cnt1Name}</span>
+              <span class="pm-mat-pill">Mat#${i + 1}</span>
+              <span class="pm-mat-text">${sku.matName}</span>
             </td>
-            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option selected>MTO</option><option>MTS</option></select></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="180"><span class="focus-border"></span></div></td>
-            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option selected>KG</option><option>L</option><option>EA</option></select></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="14"><span class="focus-border"></span></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="540"><span class="focus-border"></span></div></td>
+            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option${mrpDefault === 'MTO' ? ' selected' : ''}>MTO</option><option${mrpDefault === 'MTS' ? ' selected' : ''}>MTS</option></select></div></td>
+            <td><div class="aniInput"><input type="text" class="browser-default" value="${moqDefault}"><span class="focus-border"></span></div></td>
+            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option${sku.uom === 'KG' ? ' selected' : ''}>KG</option><option${sku.uom === 'L' ? ' selected' : ''}>L</option><option${sku.uom === 'ml' ? ' selected' : ''}>ml</option><option${sku.uom === 'EA' ? ' selected' : ''}>EA</option><option${sku.uom === 'TON' ? ' selected' : ''}>TON</option></select></div></td>
+            <td><div class="aniInput"><input type="text" class="browser-default" value="${leadDefault}"><span class="focus-border"></span></div></td>
+            <td><div class="aniInput"><input type="text" class="browser-default" value="${safetyDefault}"><span class="focus-border"></span></div></td>
             <td class="pm-spec-price">
-              <div class="aniInput"><input type="text" class="browser-default pm-price-num" value="14.51"><span class="focus-border"></span></div>
-              <div class="bi-select-wrap"><select class="bi-select browser-default pm-price-curr"><option selected>RMB</option><option>USD</option><option>KRW</option><option>EUR</option></select></div>
+              <div class="aniInput"><input type="text" class="browser-default pm-price-num" value="${priceNum}"><span class="focus-border"></span></div>
+              <div class="bi-select-wrap"><select class="bi-select browser-default pm-price-curr"><option${priceCurr === 'RMB' ? ' selected' : ''}>RMB</option><option${priceCurr === 'USD' ? ' selected' : ''}>USD</option><option${priceCurr === 'KRW' ? ' selected' : ''}>KRW</option><option>EUR</option></select></div>
             </td>
-          </tr>
-          <tr>
-            <td class="pm-spec-name">
-              <span class="pm-mat-pill">Mat#2</span>
-              <span class="pm-mat-text">${productModel.cnt2Name}</span>
-            </td>
-            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option>MTO</option><option selected>MTS</option></select></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="5000"><span class="focus-border"></span></div></td>
-            <td><div class="bi-select-wrap"><select class="bi-select browser-default"><option>KG</option><option selected>TON</option></select></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="21"><span class="focus-border"></span></div></td>
-            <td><div class="aniInput"><input type="text" class="browser-default" value="15000"><span class="focus-border"></span></div></td>
-            <td class="pm-spec-price">
-              <div class="aniInput"><input type="text" class="browser-default pm-price-num" value="13,800"><span class="focus-border"></span></div>
-              <div class="bi-select-wrap"><select class="bi-select browser-default pm-price-curr"><option selected>RMB</option><option>USD</option><option>KRW</option><option>EUR</option></select></div>
-            </td>
-          </tr>
+          </tr>`;
+          }).join('')}
         </tbody>
       </table>
       </div>
