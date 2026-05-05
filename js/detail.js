@@ -820,7 +820,7 @@ if (!isCust) {
         <div class="form-grid">
           <div class="form-group">
             <label>${productModel.parentCodeLabel}</label>
-            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" value="${pStatus === 'approved' ? productModel.release.parentCode : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div>
+            <div class="aniInput"><input type="text" id="parentCodeInput" class="browser-default" value="${productModel.release.parentCode || ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div>
           </div>
           <div class="form-group">
             <label>${productModel.parentNameLabel}</label>
@@ -889,7 +889,7 @@ if (!isCust) {
                       </select>
                     </div>
                   </td>
-                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${pStatus === 'approved' ? sku.code : ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
+                  <td><div class="aniInput"><input type="text" class="browser-default cnt-matnum" value="${sku.code || ''}" placeholder="auto generate" readonly><span class="focus-border"></span></div></td>
                   <td><div class="aniInput"><input type="text" class="browser-default cnt-matname" value="${sku.matName}" readonly><span class="focus-border"></span></div></td>
                   <td class="hoo-x"><i class="material-icons">close</i></td>
                 </tr>`;
