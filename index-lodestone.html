@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Data — Overview</title>
+<title>Master Data · Lodestone</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/common.css">
-  <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="css/directions/lodestone.css?v=8">
 </head>
 <body>
 
@@ -44,7 +43,7 @@
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
 </div>
 
-<header class="app-header">
+<header class="app-header magnet-field-overlay">
   <div class="app-header-inner">
     <div class="app-title">
       <div class="app-logo">
@@ -81,10 +80,10 @@
           <circle class="hex-dot hex-dot-5" cx="12" cy="23.5" r="1.2"/>
         </svg>
       </div>
-      <span class="app-name">MASTER<span class="app-name-accent">DATA</span></span>
+      <span class="app-name">Master<span class="app-name-accent">Data</span></span><span class="tone-badge">Lodestone</span>
     </div>
     <div class="app-actions">
-      <a href="#newReqModal" class="hBtn hViolet waves-effect modal-trigger"><i class="material-icons left">add</i><span class="label">New Request</span></a>
+      <a href="gallery.html" class="hBtn hGrey waves-effect"><i class="material-icons">apps</i><span class="label">Gallery</span></a><a href="#newReqModal" class="hBtn hViolet waves-effect modal-trigger"><i class="material-icons">add</i><span class="label">New Request</span></a>
     </div>
   </div>
 </header>
@@ -115,13 +114,13 @@
           <a href="#searchModal" class="hBtn hOrange waves-effect modal-trigger"><i class="material-icons">search</i><span class="label">Search</span></a>
         </div>
       </div>
-      <section class="mr-list-wrap">
+      <section class="mr-list-wrap magnet-field-overlay">
         <ul class="mr-list hScroll" id="mrList"></ul>
       </section>
     </div>
     <!-- 우: 써머리 카드 -->
     <div class="mr-right">
-      <div class="mr-detail-card" id="mrDetail">
+      <div class="mr-detail-card magnet-field-overlay" id="mrDetail">
         <div class="mr-detail-head">
           <div class="mr-detail-title">
             <div class="mr-detail-title-wrap" id="dtLink">
@@ -143,7 +142,7 @@
             <i class="material-icons">account_tree</i>
             <span>Process Flow</span>
           </div>
-          <div class="mr-process-flow" id="mrProcessFlow"></div>
+          <div class="mr-process-flow magnet-field-overlay" id="mrProcessFlow"></div>
         </div>
       </div>
     </div>
@@ -350,7 +349,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="js/data.js?v=2"></script>
 <script src="js/customer-data.js?v=2"></script>
-<script src="js/common.js?v=2"></script>
+<script src="js/magnet-engine.js?v=3"></script>
 <script>
   const statusLabel = { approved:'Approved', inprogress:'In Progress', rejected:'Rejected' };
 

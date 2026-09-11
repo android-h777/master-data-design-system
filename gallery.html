@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Data — Direction Gallery</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  @font-face{ font-family:'SUIT'; src:url('fonts/SUIT-Regular.otf') format('opentype'); font-weight:400; font-display:swap; }
+  @font-face{ font-family:'SUIT'; src:url('fonts/SUIT-Medium.otf') format('opentype'); font-weight:500; font-display:swap; }
+  @font-face{ font-family:'SUIT'; src:url('fonts/SUIT-SemiBold.otf') format('opentype'); font-weight:600; font-display:swap; }
+  @font-face{ font-family:'SUIT'; src:url('fonts/SUIT-Bold.otf') format('opentype'); font-weight:700; font-display:swap; }
+  @font-face{ font-family:'SUIT'; src:url('fonts/SUIT-ExtraBold.otf') format('opentype'); font-weight:800; font-display:swap; }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin: 0; padding: 0; }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SUIT', system-ui, sans-serif;
+    font-size: 14px;
+    color: rgba(20,22,30,0.92);
+    background:
+      radial-gradient(900px 700px at 85% -10%, rgba(190,180,235,0.55) 0%, transparent 50%),
+      radial-gradient(700px 520px at 5% 110%, rgba(180,225,215,0.40) 0%, transparent 50%),
+      radial-gradient(520px 400px at 50% 50%, rgba(255,225,210,0.30) 0%, transparent 60%),
+      #f7f5f1;
+    min-height: 100vh;
+    padding: 0 32px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Hero */
+  .gx-hero{
+    padding: 72px 4px 32px;
+    text-align: left;
+    max-width: 880px;
+  }
+  .gx-eyebrow{
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(20,22,30,0.55);
+    border: 1px solid rgba(20,22,30,0.10);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .gx-eyebrow i{ font-size: 14px; color: rgba(20,22,30,0.65); }
+  .gx-title{
+    margin: 22px 0 14px;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    color: rgba(20,22,30,0.95);
+  }
+  .gx-title em{
+    font-style: italic;
+    font-family: 'GT Sectra', 'Source Serif Pro', Georgia, serif;
+    font-weight: 400;
+    color: rgba(20,22,30,0.62);
+  }
+  .gx-sub{
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(20,22,30,0.62);
+    max-width: 620px;
+    margin: 0;
+  }
+  .gx-meta{
+    margin-top: 28px;
+    display: flex; gap: 20px;
+    font-size: 12px;
+    color: rgba(20,22,30,0.42);
+    font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', monospace;
+  }
+  .gx-meta b{ color: rgba(20,22,30,0.78); font-weight: 600; }
+
+  /* Grid */
+  .gx-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  /* Card base */
+  .gx-card{
+    position: relative;
+    display: flex; flex-direction: column;
+    border-radius: 20px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
+    cursor: pointer;
+    min-height: 520px;
+  }
+  .gx-card:hover{ transform: translateY(-4px); }
+
+  .gx-preview{
+    flex: 1;
+    padding: 24px;
+    display: flex; flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gx-preview::after{
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle 280px at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.4) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity .3s ease;
+    mix-blend-mode: soft-light;
+  }
+  .gx-card:hover .gx-preview::after{ opacity: 1; }
+
+  .gx-mini-head{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .gx-mini-app{ display: flex; align-items: center; gap: 8px; }
+  .gx-mini-pill{
+    padding: 3px 9px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: 999px;
+  }
+
+  .gx-mini-name{
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 8px 0 4px;
+  }
+  .gx-mini-tagline{
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* mini list rows */
+  .gx-mini-list{
+    margin-top: auto;
+    display: flex; flex-direction: column;
+    gap: 0;
+  }
+  .gx-mini-row{
+    display: flex; align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+  .gx-mini-status{
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 0 7px;
+    height: 18px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .gx-mini-status::before{
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .gx-mini-id{
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .gx-mini-desc{
+    flex: 1; min-width: 0;
+    font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gx-mini-date{
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    flex-shrink: 0;
+  }
+
+  /* meta footer (각 카드 톤에 맞게) */
+  .gx-meta-foot{
+    padding: 18px 22px 20px;
+  }
+  .gx-meta-row{
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px;
+  }
+  .gx-meta-name{
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.012em;
+  }
+  .gx-meta-num{
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .gx-meta-desc{
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin-top: 6px;
+    min-height: 38px;
+  }
+  .gx-cta{
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .gx-cta i{ font-size: 16px; transition: transform .25s ease; }
+  .gx-card:hover .gx-cta i{ transform: translateX(4px); }
+
+  /* ============================================================
+     Card 1 — Japan Minimal Grid (washi + vermillion)
+     ============================================================ */
+  .gx-card.t-japan{
+    background: #f5f1e8;
+    border: 1px solid rgba(20,16,11,0.36);
+    box-shadow: 0 12px 32px rgba(20,16,11,0.08), 0 2px 6px rgba(20,16,11,0.05);
+    color: rgba(20,16,11,0.94);
+    border-radius: 0 !important;
+    font-family: 'SUIT', 'Pretendard', -apple-system, 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  }
+  .gx-card.t-japan:hover{
+    border-color: #b53a26;
+    box-shadow: 0 22px 50px rgba(20,16,11,0.14), 0 0 28px rgba(181,58,38,0.14);
+  }
+  .gx-card.t-japan .gx-preview{ border-radius: 0; padding: 24px; }
+
+  .t-japan .gx-mini-logo{
+    position: relative;
+    width: 24px; height: 24px;
+    background: #b53a26;
+    border-radius: 0;
+  }
+  .t-japan .gx-mini-logo::before{
+    content: ''; position: absolute; inset: 3px;
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .t-japan .gx-mini-app-name{
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Source Han Serif K', Georgia, serif;
+    font-size: 14px; font-weight: 500;
+    color: rgba(20,16,11,0.94);
+    letter-spacing: 0.02em;
+  }
+  .t-japan .gx-mini-app-name span{
+    color: rgba(20,16,11,0.94);
+    font-family: inherit;
+  }
+  .t-japan .gx-mini-app-name::after{
+    content: '· 材料';
+    font-family: 'SUIT', sans-serif;
+    font-size: 9.5px;
+    font-weight: 500;
+    color: rgba(20,16,11,0.46);
+    letter-spacing: 0.18em;
+    margin-left: 8px;
+  }
+  .t-japan .gx-mini-pill{
+    background: transparent;
+    border: 1px solid rgba(181,58,38,0.45);
+    color: #b53a26;
+    border-radius: 0;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+  }
+  .t-japan .gx-mini-name{
+    color: rgba(20,16,11,0.95);
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', Georgia, serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+  .t-japan .gx-mini-name em{
+    font-family: 'Noto Serif JP', serif;
+    font-style: normal;
+    color: #b53a26;
+  }
+  .t-japan .gx-mini-tagline{
+    color: rgba(20,16,11,0.66);
+    font-size: 12.5px;
+    line-height: 1.65;
+    letter-spacing: 0;
+  }
+  .t-japan .gx-mini-list{
+    border-top: 1px solid rgba(20,16,11,0.36);
+    border-bottom: 1px solid rgba(20,16,11,0.36);
+    margin-top: auto;
+    background: transparent;
+  }
+  .t-japan .gx-mini-row{
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(20,16,11,0.10);
+    font-family: inherit;
+  }
+  .t-japan .gx-mini-row:last-child{ border-bottom: none; }
+  .t-japan .gx-mini-status{
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0;
+    padding: 0;
+    height: 18px;
+    font-family: 'SUIT', sans-serif;
+    letter-spacing: 0.16em;
+    font-weight: 600;
+  }
+  .t-japan .gx-mini-status::before{
+    width: 6px; height: 6px;
+  }
+  .t-japan .gx-mini-status.s-1{ color: #3d6b48; }
+  .t-japan .gx-mini-status.s-2{ color: #1f3a55; }
+  .t-japan .gx-mini-status.s-3{ color: #b53a26; }
+  .t-japan .gx-mini-id{ color: rgba(20,16,11,0.46); font-family: ui-monospace, 'JetBrains Mono', monospace; }
+  .t-japan .gx-mini-desc{ color: rgba(20,16,11,0.94); font-weight: 500; }
+  .t-japan .gx-mini-date{ color: rgba(20,16,11,0.46); font-family: ui-monospace, 'JetBrains Mono', monospace; }
+  .t-japan .gx-meta-foot{
+    background: transparent;
+    border-top: none;
+    padding: 18px 24px 22px;
+  }
+  .t-japan .gx-meta-name{
+    color: rgba(20,16,11,0.95);
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', Georgia, serif;
+    font-weight: 500;
+    font-size: 17px;
+  }
+  .t-japan .gx-meta-num{
+    color: rgba(20,16,11,0.46);
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+  }
+  .t-japan .gx-meta-desc{ color: rgba(20,16,11,0.66); }
+  .t-japan .gx-cta{
+    color: #b53a26;
+    font-family: 'SUIT', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 11px;
+  }
+  .t-japan .gx-cta::before{
+    content: '詳細 ';
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 500;
+    letter-spacing: 0;
+    margin-right: 4px;
+    color: #b53a26;
+  }
+
+  /* ============================================================
+     Card 2 — Bento (warm light + teal) — 그대로 유지
+     ============================================================ */
+  .gx-card.t-bento{
+    background:
+      radial-gradient(800px 600px at 100% -10%, #fffaf0 0%, transparent 50%),
+      #f5f2ec;
+    border: 1px solid rgba(40,30,20,0.07);
+    box-shadow: 0 16px 40px rgba(40,30,20,0.10), 0 4px 10px rgba(40,30,20,0.05);
+    color: #1c1813;
+  }
+  .gx-card.t-bento:hover{
+    box-shadow: 0 24px 60px rgba(40,30,20,0.16), 0 6px 14px rgba(40,30,20,0.08);
+  }
+  .t-bento .gx-mini-app-name{ font-size: 14px; font-weight: 700; letter-spacing: -0.015em; color: #1c1813; }
+  .t-bento .gx-mini-app-name em{ font-style: italic; font-family: 'GT Sectra', Georgia, serif; font-weight: 400; color: #2d5d52; }
+  .t-bento .gx-mini-pill{
+    background: #fff;
+    border: 1px solid rgba(40,30,20,0.07);
+    color: rgba(40,30,20,0.6);
+  }
+  .t-bento .gx-mini-name{
+    color: #1c1813;
+  }
+  .t-bento .gx-mini-name em{ font-style: italic; font-family: 'GT Sectra', Georgia, serif; font-weight: 400; color: #2d5d52; }
+  .t-bento .gx-mini-tagline{ color: rgba(40,30,20,0.6); }
+  .t-bento .gx-mini-list{
+    background: #fff;
+    border-radius: 12px;
+    padding: 4px;
+    border: 1px solid rgba(40,30,20,0.05);
+    box-shadow: 0 2px 8px rgba(40,30,20,0.04);
+    margin-top: auto;
+  }
+  .t-bento .gx-mini-row{
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(40,30,20,0.05);
+  }
+  .t-bento .gx-mini-row:last-child{ border-bottom: none; }
+  .t-bento .gx-mini-status{ border: 1px solid currentColor; }
+  .t-bento .gx-mini-status.s-1{ color: #4a7a55; background: rgba(74,122,85,0.10); border-color: rgba(74,122,85,0.30); }
+  .t-bento .gx-mini-status.s-2{ color: #4e6d8e; background: rgba(78,109,142,0.10); border-color: rgba(78,109,142,0.30); }
+  .t-bento .gx-mini-status.s-3{ color: #b03e3e; background: rgba(176,62,62,0.10); border-color: rgba(176,62,62,0.30); }
+  .t-bento .gx-mini-id{ color: rgba(40,30,20,0.5); }
+  .t-bento .gx-mini-desc{ color: #1c1813; font-weight: 600; }
+  .t-bento .gx-mini-date{ color: rgba(40,30,20,0.45); }
+  .t-bento .gx-meta-foot{
+    background: rgba(40,30,20,0.04);
+    border-top: 1px solid rgba(40,30,20,0.06);
+  }
+  .t-bento .gx-meta-name{ color: #1c1813; }
+  .t-bento .gx-meta-num{ color: rgba(40,30,20,0.4); }
+  .t-bento .gx-meta-desc{ color: rgba(40,30,20,0.62); }
+  .t-bento .gx-cta{ color: #2d5d52; }
+
+  .t-bento .gx-mini-logo{
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #2d5d52, #1a3d33);
+    box-shadow: 0 1px 2px rgba(40,30,20,0.10);
+  }
+
+  /* ============================================================
+     Card 3 — Brutalist LIGHT (oat + hot magenta)
+     ============================================================ */
+  .gx-card.t-brutalist{
+    background: #fafaf6;
+    border: 1px solid rgba(0,0,0,0.78);
+    box-shadow: 0 0 0 4px rgba(255,46,99,0.12), 0 16px 36px rgba(20,18,12,0.18);
+    border-radius: 0 !important;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    color: rgba(0,0,0,0.95);
+  }
+  .gx-card.t-brutalist:hover{
+    border-color: #ff2e63;
+    box-shadow: 0 0 0 4px rgba(255,46,99,0.22), 0 24px 50px rgba(20,18,12,0.24);
+  }
+  .gx-card.t-brutalist .gx-preview{ border-radius: 0; padding: 20px; }
+  .t-brutalist .gx-mini-app-name{ font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(0,0,0,0.95); font-family: inherit; }
+  .t-brutalist .gx-mini-app-name span{ color: #ff2e63; }
+  .t-brutalist .gx-mini-pill{
+    border-radius: 0;
+    background: transparent;
+    border: 1px solid #ff2e63;
+    color: #ff2e63;
+    font-family: inherit;
+  }
+  .t-brutalist .gx-mini-name{
+    color: rgba(0,0,0,0.95);
+    font-family: inherit;
+    font-size: 26px;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .t-brutalist .gx-mini-tagline{ color: rgba(0,0,0,0.62); font-family: inherit; font-size: 11.5px; line-height: 1.55; }
+  .t-brutalist .gx-mini-list{
+    border: 1px solid rgba(0,0,0,0.45);
+    margin-top: auto;
+    background: #ffffff;
+  }
+  .t-brutalist .gx-mini-row{
+    padding: 8px 10px;
+    border-bottom: 1px dashed rgba(0,0,0,0.18);
+    font-family: inherit;
+  }
+  .t-brutalist .gx-mini-row:last-child{ border-bottom: none; }
+  .t-brutalist .gx-mini-status{
+    border-radius: 0;
+    background: transparent !important;
+    padding: 0;
+    height: 16px;
+    font-family: inherit;
+    letter-spacing: 0.1em;
+  }
+  .t-brutalist .gx-mini-status::before{ display: none; }
+  .t-brutalist .gx-mini-status::after{ content: ']'; color: rgba(0,0,0,0.4); padding-left: 3px; }
+  .t-brutalist .gx-mini-status.s-1{ color: #1f7a3c; }
+  .t-brutalist .gx-mini-status.s-2{ color: #1f5fa8; }
+  .t-brutalist .gx-mini-status.s-3{ color: #d92020; }
+  .t-brutalist .gx-mini-status.s-1::before,
+  .t-brutalist .gx-mini-status.s-2::before,
+  .t-brutalist .gx-mini-status.s-3::before{ display: inline; content: '['; color: rgba(0,0,0,0.4); padding-right: 3px; background: transparent; width: auto; height: auto; border-radius: 0; }
+  .t-brutalist .gx-mini-id{ color: rgba(0,0,0,0.78); font-family: inherit; }
+  .t-brutalist .gx-mini-desc{ color: rgba(0,0,0,0.95); font-family: inherit; font-weight: 500; }
+  .t-brutalist .gx-mini-date{ color: rgba(0,0,0,0.50); font-family: inherit; }
+  .t-brutalist .gx-meta-foot{
+    background: #ffffff;
+    border-top: 1px solid rgba(0,0,0,0.45);
+    border-radius: 0;
+  }
+  .t-brutalist .gx-meta-name{ color: rgba(0,0,0,0.95); font-family: inherit; text-transform: uppercase; letter-spacing: 0.06em; font-size: 14px; }
+  .t-brutalist .gx-meta-num{ color: #ff2e63; font-family: inherit; }
+  .t-brutalist .gx-meta-desc{ color: rgba(0,0,0,0.62); font-family: inherit; font-size: 11.5px; }
+  .t-brutalist .gx-cta{ color: #ff2e63; font-family: inherit; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  .t-brutalist .gx-cta::before{ content: '> '; color: #ff2e63; }
+
+  .t-brutalist .gx-mini-logo{
+    width: 22px; height: 22px;
+    border-radius: 0;
+    background: #ff2e63;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 10px; font-weight: 700;
+    color: #ffffff;
+  }
+
+  /* ============================================================
+     Card 4 — Lodestone (PANTONE warm cream + Quiet Violet field)
+     ============================================================ */
+  .gx-card.t-lodestone{
+    background:
+      radial-gradient(360px 240px at var(--mx,50%) var(--my,50%), rgba(155,142,190,0.14) 0%, transparent 60%),
+      #F0EDE5;
+    border: 1px solid rgba(80,68,50,0.10);
+    box-shadow: 0 12px 32px rgba(80,68,50,0.08), 0 2px 6px rgba(80,68,50,0.05);
+    color: rgba(46,42,32,0.94);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .gx-card.t-lodestone:hover{
+    border-color: rgba(155,142,190,0.45);
+    box-shadow: 0 22px 50px rgba(80,68,50,0.12), 0 0 0 4px rgba(155,142,190,0.10);
+  }
+  .gx-card.t-lodestone .gx-preview{ padding: 22px; }
+
+  /* mini bar magnet logo (N/S 양극) — PANTONE wine + violet */
+  .t-lodestone .gx-mini-logo{
+    position: relative;
+    width: 24px; height: 24px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #9c4a4a 0%, #9c4a4a 50%, #7A6CA0 50%, #7A6CA0 100%);
+    box-shadow: 0 0 0 1px rgba(80,68,50,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .t-lodestone .gx-mini-logo::after{
+    content: ''; position: absolute;
+    left: 0; right: 0; top: 50%; height: 1px;
+    background: rgba(255,255,255,0.85);
+    transform: translateY(-0.5px);
+  }
+  .t-lodestone .gx-mini-app-name{
+    font-size: 13px; font-weight: 600; color: rgba(46,42,32,0.94);
+    letter-spacing: 0.005em;
+  }
+  .t-lodestone .gx-mini-app-name span{
+    color: rgba(46,42,32,0.94);
+    font-weight: 700;
+  }
+  .t-lodestone .gx-mini-pill{
+    background: rgba(155,142,190,0.14);
+    border: 1px solid rgba(155,142,190,0.36);
+    color: #7A6CA0;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+  }
+  .t-lodestone .gx-mini-name{
+    color: rgba(46,42,32,0.95);
+    font-family: 'SUIT', 'Pretendard', -apple-system, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+  .t-lodestone .gx-mini-name span{
+    color: #7A6CA0;
+  }
+  .t-lodestone .gx-mini-tagline{ color: rgba(46,42,32,0.66); font-size: 12.5px; line-height: 1.55; }
+
+  .t-lodestone .gx-mini-list{
+    border-top: 1px solid rgba(80,68,50,0.10);
+    margin-top: auto; padding-top: 4px;
+  }
+  .t-lodestone .gx-mini-row{
+    border-bottom: 1px solid rgba(80,68,50,0.06);
+    padding: 8px 4px;
+  }
+  .t-lodestone .gx-mini-row:last-child{ border-bottom: none; }
+
+  /* compass needle in mini status (정적 — 다양한 각도로 미리 회전) */
+  .t-lodestone .gx-mini-status{
+    position: relative;
+    background: #fdfcf8 !important;
+    border: 1px solid rgba(80,68,50,0.12);
+    border-radius: 999px;
+    padding: 0 9px 0 22px;
+    height: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(46,42,32,0.66);
+    box-shadow: 0 1px 2px rgba(80,68,50,0.06);
+  }
+  .t-lodestone .gx-mini-status::before{
+    /* needle — PANTONE violet/wine */
+    content: '';
+    position: absolute;
+    left: 7px; top: 50%;
+    width: 10px; height: 2px;
+    margin-top: -1px;
+    background: linear-gradient(90deg, #7A6CA0 0%, #7A6CA0 49%, rgba(255,255,255,0.45) 49%, rgba(255,255,255,0.45) 51%, #9c4a4a 51%, #9c4a4a 100%);
+    border-radius: 1.5px;
+    transform: rotate(var(--needle-angle, 0deg));
+    box-shadow: 0 0 4px rgba(155,142,190,0.40);
+  }
+  .t-lodestone .gx-mini-status::after{
+    content: '';
+    position: absolute;
+    left: 11px; top: 50%;
+    width: 2px; height: 2px;
+    margin-top: -1px;
+    background: rgba(46,42,32,0.55);
+    border-radius: 50%;
+  }
+  .t-lodestone .gx-mini-status.s-1{ color: #6B8A55; background: rgba(107,138,85,0.12) !important; border-color: rgba(107,138,85,0.32); }
+  .t-lodestone .gx-mini-status.s-2{ color: #5B7A9C; background: rgba(91,122,156,0.12) !important; border-color: rgba(91,122,156,0.32); }
+  .t-lodestone .gx-mini-status.s-3{ color: #9C4A4A; background: rgba(156,74,74,0.12) !important; border-color: rgba(156,74,74,0.32); }
+
+  .t-lodestone .gx-mini-id{ color: rgba(46,42,32,0.55); font-family: ui-monospace, monospace; }
+  .t-lodestone .gx-mini-desc{ color: rgba(46,42,32,0.92); font-weight: 500; }
+  .t-lodestone .gx-mini-date{ color: rgba(46,42,32,0.46); font-family: ui-monospace, monospace; }
+
+  .t-lodestone .gx-meta-foot{
+    background: rgba(80,68,50,0.04);
+    border-top: 1px solid rgba(80,68,50,0.06);
+  }
+  .t-lodestone .gx-meta-name{ color: rgba(46,42,32,0.95); }
+  .t-lodestone .gx-meta-num{ color: rgba(46,42,32,0.4); }
+  .t-lodestone .gx-meta-desc{ color: rgba(46,42,32,0.62); }
+  .t-lodestone .gx-cta{ color: #7A6CA0; }
+
+  /* ============================================================
+     Card 5 — Caustic (frosted glass + sun caustic)
+     ============================================================ */
+  .gx-card.t-caustic{
+    background:
+      radial-gradient(420px 320px at 100% -10%, rgba(255,210,170,0.55) 0%, transparent 55%),
+      radial-gradient(360px 260px at 0% 110%, rgba(170,210,255,0.40) 0%, transparent 55%),
+      radial-gradient(280px 220px at var(--mx,50%) var(--my,50%), rgba(255,200,140,0.30) 0%, transparent 60%),
+      linear-gradient(180deg, #eef3fa 0%, #f6f4ee 100%);
+    border: 1px solid rgba(40,55,90,0.10);
+    border-top: 1px solid rgba(255,255,255,0.85);
+    box-shadow: 0 12px 32px rgba(28,40,68,0.07), 0 2px 6px rgba(28,40,68,0.04);
+    color: rgba(28,40,68,0.94);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .gx-card.t-caustic:hover{
+    border-color: rgba(255,156,51,0.36);
+    box-shadow: 0 22px 50px rgba(28,40,68,0.10), 0 0 32px rgba(255,180,90,0.22);
+  }
+  .gx-card.t-caustic .gx-preview{ padding: 22px; }
+
+  /* refractive lens logo */
+  .t-caustic .gx-mini-logo{
+    position: relative;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%,
+        rgba(255,255,255,0.95) 0%,
+        rgba(255,220,180,0.4) 28%,
+        rgba(180,220,255,0.18) 60%,
+        rgba(140,180,220,0.10) 100%);
+    box-shadow:
+      0 0 0 1px rgba(40,55,90,0.16),
+      0 2px 6px rgba(28,40,68,0.12),
+      0 0 14px rgba(255,180,90,0.32),
+      inset 0 0 6px rgba(255,255,255,0.5);
+    overflow: hidden;
+  }
+  .t-caustic .gx-mini-logo::before{
+    content: ''; position: absolute;
+    inset: 2px 2px 50% 2px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.7), transparent 70%);
+  }
+  .t-caustic .gx-mini-logo::after{
+    content: ''; position: absolute;
+    inset: 50% 4px 4px 4px;
+    border-radius: 0 0 50% 50%;
+    background: radial-gradient(ellipse at 50% 100%, rgba(255,156,51,0.5), transparent 70%);
+  }
+  .t-caustic .gx-mini-app-name{
+    font-size: 14px; font-weight: 600; color: rgba(28,40,68,0.94);
+    letter-spacing: 0.005em;
+  }
+  .t-caustic .gx-mini-app-name span{
+    background: linear-gradient(180deg, #ff9c33, #d97718);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+  }
+  .t-caustic .gx-mini-pill{
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(255,156,51,0.32);
+    color: #d97718;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .t-caustic .gx-mini-name{
+    color: rgba(28,40,68,0.95);
+    font-family: 'SUIT', 'Pretendard', -apple-system, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+  }
+  .t-caustic .gx-mini-name em{
+    font-style: italic;
+    font-family: 'GT Sectra', Georgia, serif;
+    font-weight: 400;
+    background: linear-gradient(180deg, #ff9c33, #d97718);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .t-caustic .gx-mini-tagline{ color: rgba(28,40,68,0.66); font-size: 12.5px; line-height: 1.55; }
+
+  .t-caustic .gx-mini-list{
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(40,55,90,0.10);
+    border-top: 1px solid rgba(255,255,255,0.85);
+    border-radius: 12px;
+    padding: 4px;
+    margin-top: auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .t-caustic .gx-mini-row{
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(40,55,90,0.06);
+  }
+  .t-caustic .gx-mini-row:last-child{ border-bottom: none; }
+  .t-caustic .gx-mini-status{ border: 1px solid currentColor; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .t-caustic .gx-mini-status::before{ box-shadow: 0 0 4px currentColor; }
+  .t-caustic .gx-mini-status.s-1{ color: #2c8c4d; background: rgba(44,140,77,0.10); border-color: rgba(44,140,77,0.32); }
+  .t-caustic .gx-mini-status.s-2{ color: #2280b8; background: rgba(74,176,232,0.10); border-color: rgba(74,176,232,0.36); }
+  .t-caustic .gx-mini-status.s-3{ color: #d8324a; background: rgba(216,50,74,0.10); border-color: rgba(216,50,74,0.32); }
+  .t-caustic .gx-mini-id{ color: rgba(28,40,68,0.55); font-family: ui-monospace, monospace; }
+  .t-caustic .gx-mini-desc{ color: rgba(28,40,68,0.92); font-weight: 500; }
+  .t-caustic .gx-mini-date{ color: rgba(28,40,68,0.46); font-family: ui-monospace, monospace; }
+  .t-caustic .gx-meta-foot{
+    background: rgba(255,255,255,0.30);
+    border-top: 1px solid rgba(40,55,90,0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .t-caustic .gx-meta-name{ color: rgba(28,40,68,0.95); }
+  .t-caustic .gx-meta-num{ color: rgba(28,40,68,0.4); }
+  .t-caustic .gx-meta-desc{ color: rgba(28,40,68,0.62); }
+  .t-caustic .gx-cta{ color: #d97718; }
+
+  /* ============================================================
+     Footer
+     ============================================================ */
+  .gx-foot{
+    margin-top: 60px;
+    padding: 24px 4px;
+    color: rgba(20,22,30,0.40);
+    font-size: 11.5px;
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    border-top: 1px solid rgba(20,22,30,0.07);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header class="gx-hero">
+  <div class="gx-eyebrow"><i class="material-icons">tune</i><span>Master Data &middot; Direction Studies</span></div>
+  <h1 class="gx-title">Five directions, <em>one product.</em></h1>
+  <p class="gx-sub">
+    같은 데이터, 같은 화면 구조. 다만 디자인 철학을 셋으로 갈라본 시안.
+    표면 트릭이 아니라 <b style="color:rgba(20,22,30,0.85);">정보 위계 · 타이포 · 인터랙션 디테일</b>로 캐릭터를 만든다.
+    카드를 클릭하면 해당 방향이 적용된 Master Data 화면으로 진입.
+  </p>
+  <div class="gx-meta">
+    <span><b>05</b> directions</span>
+    <span><b>26</b> material requests</span>
+    <span><b>—</b> Updated 2026.05.11</span>
+  </div>
+</header>
+
+<main class="gx-grid">
+
+  <!-- ===== 1. JAPAN MINIMAL GRID ===== -->
+  <a class="gx-card t-japan" href="index-japan.html">
+    <div class="gx-preview">
+      <div class="gx-mini-head">
+        <div class="gx-mini-app">
+          <div class="gx-mini-logo"></div>
+          <div class="gx-mini-app-name">Master<span>Data</span></div>
+        </div>
+        <div class="gx-mini-pill">Japan</div>
+      </div>
+      <div>
+        <div class="gx-mini-name"><em>静</em>かに、正確に</div>
+        <p class="gx-mini-tagline">Washi paper 베이스 · vermillion 한 점 · 정밀한 hairline grid · serif heading · 큰 여백. 인쇄물 같은 절제와 정밀함.</p>
+      </div>
+      <div class="gx-mini-list">
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-2">In Progress</span>
+          <span class="gx-mini-id">MR-1022610</span>
+          <span class="gx-mini-desc">DESC-L-054 / DRUM / 254KG</span>
+          <span class="gx-mini-date">May 11</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-1">Approved</span>
+          <span class="gx-mini-id">MR-1022598</span>
+          <span class="gx-mini-desc">PKG-A-220 / Bottle</span>
+          <span class="gx-mini-date">May 10</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-3">Rejected</span>
+          <span class="gx-mini-id">MR-1022571</span>
+          <span class="gx-mini-desc">FG-Q-118 / Reactivation</span>
+          <span class="gx-mini-date">May 09</span>
+        </div>
+      </div>
+    </div>
+    <div class="gx-meta-foot">
+      <div class="gx-meta-row">
+        <div class="gx-meta-name">Japan · 材料管理</div>
+        <div class="gx-meta-num">01 / 05</div>
+      </div>
+      <div class="gx-meta-desc">Washi (和紙) 톤 + vermillion (朱) 한 점, 모리사와 영감 serif heading, 정밀한 dashed grid, 한자 라벨 디테일. 절제된 인쇄물 미감.</div>
+      <div class="gx-cta">View this direction <i class="material-icons">arrow_forward</i></div>
+    </div>
+  </a>
+
+  <!-- ===== 2. BENTO ===== -->
+  <a class="gx-card t-bento" href="index-bento.html">
+    <div class="gx-preview">
+      <div class="gx-mini-head">
+        <div class="gx-mini-app">
+          <div class="gx-mini-logo"></div>
+          <div class="gx-mini-app-name">Master<em>Data</em></div>
+        </div>
+        <div class="gx-mini-pill">Bento</div>
+      </div>
+      <div>
+        <div class="gx-mini-name">Editorial <em>and</em> warm</div>
+        <p class="gx-mini-tagline">Warm off-white · 큰 둥근 카드 · 매거진 위계 타이포 · 부드러운 elevation. Apple 신제품 페이지 톤.</p>
+      </div>
+      <div class="gx-mini-list">
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-2">In Progress</span>
+          <span class="gx-mini-id">MR-1022610</span>
+          <span class="gx-mini-desc">DESC-L-054 / DRUM / 254KG</span>
+          <span class="gx-mini-date">May 11</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-1">Approved</span>
+          <span class="gx-mini-id">MR-1022598</span>
+          <span class="gx-mini-desc">PKG-A-220 / Bottle</span>
+          <span class="gx-mini-date">May 10</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-3">Rejected</span>
+          <span class="gx-mini-id">MR-1022571</span>
+          <span class="gx-mini-desc">FG-Q-118 / Reactivation</span>
+          <span class="gx-mini-date">May 09</span>
+        </div>
+      </div>
+    </div>
+    <div class="gx-meta-foot">
+      <div class="gx-meta-row">
+        <div class="gx-meta-name">Bento Editorial</div>
+        <div class="gx-meta-num">02 / 05</div>
+      </div>
+      <div class="gx-meta-desc">Warm off-white 베이스 + deep teal 액센트. 큰 둥근 카드, 매거진 마스트헤드, serif italic 한 점. 따뜻하고 절제된 분위기.</div>
+      <div class="gx-cta">View this direction <i class="material-icons">arrow_forward</i></div>
+    </div>
+  </a>
+
+  <!-- ===== 3. BRUTALIST (LIGHT) ===== -->
+  <a class="gx-card t-brutalist" href="index-brutalist.html">
+    <div class="gx-preview">
+      <div class="gx-mini-head">
+        <div class="gx-mini-app">
+          <div class="gx-mini-logo">M</div>
+          <div class="gx-mini-app-name">MASTER<span>DATA</span></div>
+        </div>
+        <div class="gx-mini-pill">Brutal</div>
+      </div>
+      <div>
+        <div class="gx-mini-name">RAW DATA<br>NO NONSENSE</div>
+        <p class="gx-mini-tagline">/ MONOSPACE EVERYTHING · 0PX RADIUS · HOT MAGENTA ACCENT · SWISS / EDITORIAL SHARP /</p>
+      </div>
+      <div class="gx-mini-list">
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-2">IN PROGRESS</span>
+          <span class="gx-mini-id">MR-1022610</span>
+          <span class="gx-mini-desc">DESC-L-054 / DRUM / 254KG</span>
+          <span class="gx-mini-date">2025-05-11</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-1">APPROVED</span>
+          <span class="gx-mini-id">MR-1022598</span>
+          <span class="gx-mini-desc">PKG-A-220 / BOTTLE</span>
+          <span class="gx-mini-date">2025-05-10</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-3">REJECTED</span>
+          <span class="gx-mini-id">MR-1022571</span>
+          <span class="gx-mini-desc">FG-Q-118 / REACTIVATION</span>
+          <span class="gx-mini-date">2025-05-09</span>
+        </div>
+      </div>
+    </div>
+    <div class="gx-meta-foot">
+      <div class="gx-meta-row">
+        <div class="gx-meta-name">Brutal Sharp</div>
+        <div class="gx-meta-num">03 / 05</div>
+      </div>
+      <div class="gx-meta-desc">옅은 oat 베이스 + 굵은 검정 grid + hot magenta 액센트, 모노스페이스 전체, 0px 모서리. Swiss/Editorial Sharp 톤. 캐릭터 강함.</div>
+      <div class="gx-cta">RUN this direction <i class="material-icons">arrow_forward</i></div>
+    </div>
+  </a>
+
+  <!-- ===== 4. LODESTONE (Magnetic Field Engine) ===== -->
+  <a class="gx-card t-lodestone" href="index-lodestone.html">
+    <div class="gx-preview">
+      <div class="gx-mini-head">
+        <div class="gx-mini-app">
+          <div class="gx-mini-logo"></div>
+          <div class="gx-mini-app-name">Master<span>Data</span></div>
+        </div>
+        <div class="gx-mini-pill">Field</div>
+      </div>
+      <div>
+        <div class="gx-mini-name">Field <span>·</span> 자기장이<br>데이터를 정렬</div>
+        <p class="gx-mini-tagline">물리 공식 기반 (dipole field, 1/r²) · status가 compass needle · hover 시 마우스로 미세 끌림 · 자기장 라인 SVG 실시간 계산.</p>
+      </div>
+      <div class="gx-mini-list">
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-2" style="--needle-angle: -38deg;">In Progress</span>
+          <span class="gx-mini-id">MR-1022610</span>
+          <span class="gx-mini-desc">DESC-L-054 / DRUM / 254KG</span>
+          <span class="gx-mini-date">May 11</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-1" style="--needle-angle: -22deg;">Approved</span>
+          <span class="gx-mini-id">MR-1022598</span>
+          <span class="gx-mini-desc">PKG-A-220 / Bottle</span>
+          <span class="gx-mini-date">May 10</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-3" style="--needle-angle: -8deg;">Rejected</span>
+          <span class="gx-mini-id">MR-1022571</span>
+          <span class="gx-mini-desc">FG-Q-118 / Reactivation</span>
+          <span class="gx-mini-date">May 09</span>
+        </div>
+      </div>
+    </div>
+    <div class="gx-meta-foot">
+      <div class="gx-meta-row">
+        <div class="gx-meta-name">Lodestone · Magnetic Field</div>
+        <div class="gx-meta-num">04 / 05</div>
+      </div>
+      <div class="gx-meta-desc">실제 자기 dipole 공식이 실시간 계산되는 인터랙티브 엔진. 글래스 엔진과 같은 결의 후속편 — 정지 상태엔 차분, 마우스 움직이면 살아남.</div>
+      <div class="gx-cta">View this direction <i class="material-icons">arrow_forward</i></div>
+    </div>
+  </a>
+
+  <!-- ===== 5. CAUSTIC (Refractive Light) ===== -->
+  <a class="gx-card t-caustic" href="index-caustic.html">
+    <div class="gx-preview">
+      <div class="gx-mini-head">
+        <div class="gx-mini-app">
+          <div class="gx-mini-logo"></div>
+          <div class="gx-mini-app-name">Master<span>Data</span></div>
+        </div>
+        <div class="gx-mini-pill">Caustic</div>
+      </div>
+      <div>
+        <div class="gx-mini-name">Refracted <em>light</em><br>on glass</div>
+        <p class="gx-mini-tagline">Frosted glass · 광원(마우스) 따라 흔들리는 caustic 빛 무늬 · RGB 색수차 (Snell 굴절) · 글래스 엔진의 후속편.</p>
+      </div>
+      <div class="gx-mini-list">
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-2">In Progress</span>
+          <span class="gx-mini-id">MR-1022610</span>
+          <span class="gx-mini-desc">DESC-L-054 / DRUM / 254KG</span>
+          <span class="gx-mini-date">May 11</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-1">Approved</span>
+          <span class="gx-mini-id">MR-1022598</span>
+          <span class="gx-mini-desc">PKG-A-220 / Bottle</span>
+          <span class="gx-mini-date">May 10</span>
+        </div>
+        <div class="gx-mini-row">
+          <span class="gx-mini-status s-3">Rejected</span>
+          <span class="gx-mini-id">MR-1022571</span>
+          <span class="gx-mini-desc">FG-Q-118 / Reactivation</span>
+          <span class="gx-mini-date">May 09</span>
+        </div>
+      </div>
+    </div>
+    <div class="gx-meta-foot">
+      <div class="gx-meta-row">
+        <div class="gx-meta-name">Caustic · Refractive Light</div>
+        <div class="gx-meta-num">05 / 05</div>
+      </div>
+      <div class="gx-meta-desc">SVG turbulence + RGB 색수차로 패널 위에 흔들리는 caustic 빛 무늬. 마우스 = 광원, 가까워질수록 빛이 강해짐. 글래스 엔진의 자연스러운 진화.</div>
+      <div class="gx-cta">View this direction <i class="material-icons">arrow_forward</i></div>
+    </div>
+  </a>
+
+</main>
+
+<footer class="gx-foot">
+  <span>D:\Project\MasterDataDirections &middot; 5 directions, 1 codebase</span>
+  <span>· · · MASTERDATA / DIRECTION GALLERY / v1.1</span>
+</footer>
+
+<script>
+/* card-local mouse spotlight */
+document.querySelectorAll('.gx-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width) * 100 + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height) * 100 + '%');
+  });
+});
+</script>
+
+</body>
+</html>

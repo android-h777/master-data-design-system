@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Master Data — Overview</title>
+<title>Master Data · Bento</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/common.css">
-  <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="css/directions/bento.css">
 </head>
 <body>
 
@@ -81,15 +80,22 @@
           <circle class="hex-dot hex-dot-5" cx="12" cy="23.5" r="1.2"/>
         </svg>
       </div>
-      <span class="app-name">MASTER<span class="app-name-accent">DATA</span></span>
+      <span class="app-name">Master<span class="app-name-accent">Data</span></span><span class="tone-badge">Bento</span>
     </div>
     <div class="app-actions">
-      <a href="#newReqModal" class="hBtn hViolet waves-effect modal-trigger"><i class="material-icons left">add</i><span class="label">New Request</span></a>
+      <a href="gallery.html" class="hBtn hGrey waves-effect"><i class="material-icons">apps</i><span class="label">Gallery</span></a><a href="#newReqModal" class="hBtn hViolet waves-effect modal-trigger"><i class="material-icons">add</i><span class="label">New Request</span></a>
     </div>
   </div>
 </header>
 
 <main class="app-main">
+
+  <section class="bn-hero">
+    <div class="bn-hero-eyebrow">Master Data · Vol. 11</div>
+    <h1 class="bn-hero-title">Material Requests <em>in flight</em></h1>
+    <div class="bn-hero-meta"><span><b id="bnInProgress">—</b> in progress</span><span><b id="bnAwaiting">—</b> awaiting me</span><span>Updated <b>just now</b></span></div>
+  </section>
+
 
   <article class="mr-layout">
     <!-- 좌: 리스트 -->
@@ -403,6 +409,13 @@
     const el = document.querySelector(`.tab-count[data-count="${k}"]`);
     if (el) el.textContent = v;
   });
+  /* Bento hero 통계 채우기 */
+  (function(){
+    const inProg = document.getElementById('bnInProgress');
+    const awai = document.getElementById('bnAwaiting');
+    if (inProg) inProg.textContent = counts.inprogress;
+    if (awai) awai.textContent = counts.mine;
+  })();
 
   /* SLA 경과일 계산 — inprogress만 체크 */
   const TODAY = new Date('2026-03-28');
